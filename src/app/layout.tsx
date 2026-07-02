@@ -22,11 +22,11 @@ const oxanium = Oxanium({
 export const metadata: Metadata = {
   title: "ChickenAndy — Live Streamer Directory",
   description:
-    "The ultimate community hub for streamers and gaming enthusiasts. Watch 100+ Kick streamers live, all in one place.",
+    "See which ChickenAndy streamers are live right now, ranked by viewers.",
   openGraph: {
     title: "ChickenAndy — Live Streamer Directory",
     description:
-      "The ultimate community hub for streamers and gaming enthusiasts.",
+      "See which ChickenAndy streamers are live right now, ranked by viewers.",
     type: "website",
   },
 };

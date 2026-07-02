@@ -2,24 +2,33 @@ import PagePlaceholder from "@/components/PagePlaceholder";
 
 export const metadata = { title: "Community — ChickenAndy" };
 
+const CATEGORIES = [
+  "General Discussion",
+  "RV Life",
+  "Stream Discussion",
+  "Suggestions & Feedback",
+  "Clips & Media",
+  "Off Topic",
+  "Announcements",
+];
+
 export default function CommunityPage() {
   return (
-    <PagePlaceholder eyebrow="Community" title="Community">
+    <PagePlaceholder eyebrow="Community" title="Community is coming soon">
       <p>
-        Clips, events, giveaways and the crew&apos;s Discord live here. This section of the directory
-        is still being built out.
+        A place to talk RV life, streams, clips and everything ChickenAndy — even when streams are
+        offline.
       </p>
-      <p>
-        In the meantime, jump into any live stream from the{" "}
-        <a href="/streamers" className="text-accent hover:underline">
-          directory
-        </a>{" "}
-        or follow the{" "}
-        <a href="/map" className="text-accent hover:underline">
-          RV X route
-        </a>
-        .
-      </p>
+      <div className="flex flex-wrap gap-2 pt-2">
+        {CATEGORIES.map((c) => (
+          <span
+            key={c}
+            className="rounded-full border border-line bg-elevated px-3 py-1.5 text-xs font-medium text-dim"
+          >
+            {c}
+          </span>
+        ))}
+      </div>
     </PagePlaceholder>
   );
 }

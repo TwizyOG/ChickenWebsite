@@ -1,27 +1,29 @@
 import PagePlaceholder from "@/components/PagePlaceholder";
-import { TOTAL_STREAMERS } from "@/lib/streamers";
 
 export const metadata = { title: "About — ChickenAndy" };
 
 export default function AboutPage() {
   return (
-    <PagePlaceholder eyebrow="About" title="ChickenAndy">
+    <PagePlaceholder eyebrow="About" title="About ChickenAndy">
       <p>
-        ChickenAndy is a community hub and live directory for {TOTAL_STREAMERS}+ Kick streamers —
-        the RV crew, their friends, and the wider IRL/Just-Chatting scene — all watchable in one
-        place with live viewer counts, previews and chat.
+        ChickenAndy is a curated community hub for streamers and gaming enthusiasts — discover
+        who&apos;s live across Kick and beyond, all ranked in one place.
       </p>
       <p>
-        Every stream and chat on this site is embedded live from{" "}
-        <a href="https://kick.com" className="text-accent hover:underline">
-          Kick
-        </a>{" "}
-        using Kick&apos;s own public player and chat. Age-restricted streams keep Kick&apos;s native
-        18+ gate, and this site adds its own age confirmation on entry.
+        Browse featured creators, jump into live streams and chat, and keep up with the
+        fastest-growing community. Built for the community, by the community.
       </p>
       <p>
-        This is a fan-built directory clone. It stores no personal data and serves no content of its
-        own — it simply points you at streams that are already public on Kick.
+        Questions or business inquiries? Reach us at{" "}
+        <a href="mailto:hello@chickenandy.net" className="text-accent hover:underline">
+          hello@chickenandy.net
+        </a>
+        .
+      </p>
+      <p className="text-faint">
+        Fan-built directory clone — every stream and chat is embedded live from Kick&apos;s own
+        public player and chat, with Kick&apos;s native 18+ gate kept intact and a site-level age
+        confirmation on entry.
       </p>
     </PagePlaceholder>
   );
