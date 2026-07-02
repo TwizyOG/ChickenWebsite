@@ -22,9 +22,11 @@ export function CardSkeleton() {
 export default function StreamerCard({
   streamer,
   onSelect,
+  onInfo,
 }: {
   streamer: Streamer;
   onSelect?: (slug: string) => void;
+  onInfo?: (streamer: Streamer) => void;
 }) {
   const { slug, name } = streamer;
   const live = useKick(slug);
@@ -96,6 +98,23 @@ export default function StreamerCard({
       {/* top-right cluster sits above the click target */}
       <div className="absolute right-2 top-2 z-20 flex items-center gap-1">
         {live.mature && <MatureBadge />}
+        {onInfo && (
+          <button
+            type="button"
+            aria-label={`${name} details, socials and profile`}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onInfo(streamer);
+            }}
+            className="grid place-items-center rounded-full border border-line bg-black/40 p-2 text-dim opacity-0 transition hover:border-accent/50 hover:text-accent group-hover:opacity-100"
+          >
+            <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <circle cx="12" cy="12" r="9" />
+              <path d="M12 16v-4M12 8h.01" />
+            </svg>
+          </button>
+        )}
         <FavButton slug={slug} size={14} className="opacity-0 transition group-hover:opacity-100" />
       </div>
     </div>

@@ -48,7 +48,7 @@ function darkStyle(): StyleSpecification {
 }
 
 function bezierLeg(a: City, b: City): [number, number][] {
-  const ARC: Record<string, number> = { "austin>nola": 1.1, "nola>tampa": 2.4, "tampa>orlando": 0.5 };
+  const ARC: Record<string, number> = { "austin>nola": 1.1, "nola>tampa": 2.4, "tampa>orlando": 0.5, "orlando>miami": 0.35 };
   const arc = ARC[`${a.id}>${b.id}`] ?? 1;
   const c = [(a.lon + b.lon) / 2, (a.lat + b.lat) / 2 + arc];
   const pts: [number, number][] = [];

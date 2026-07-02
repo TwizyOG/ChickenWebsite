@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Logo from "./Logo";
+import { currentKickUser } from "@/lib/kickAuth";
 
 const NAV = [
   { href: "/", label: "Home" },
@@ -18,6 +19,11 @@ export default function Header() {
   const pathname = usePathname();
   const router = useRouter();
   const [q, setQ] = useState("");
+  const [user, setUser] = useState<string | null>(null);
+
+  useEffect(() => {
+    setUser(currentKickUser());
+  }, [pathname]);
 
   const isActive = (href: string) =>
     href === "/" ? pathname === "/" : pathname.startsWith(href);
@@ -67,12 +73,26 @@ export default function Header() {
           </kbd>
         </form>
 
-        <Link
-          href="/login"
-          className="ml-auto md:ml-0 rounded-full bg-accent px-4 py-2 text-sm font-semibold text-accent-ink transition hover:bg-accent-soft"
-        >
-          Sign in
-        </Link>
+        {user ? (
+          <div className="ml-auto md:ml-0 flex items-center gap-2">
+            <span className="hidden sm:inline text-sm font-semibold text-kick" title="Signed in with Kick">
+              {user}
+            </span>
+            <a
+              href="/api/auth/kick/logout"
+              className="rounded-full border border-line px-3 py-2 text-sm font-medium text-dim transition hover:text-ink"
+            >
+              Sign out
+            </a>
+          </div>
+        ) : (
+          <Link
+            href="/login"
+            className="ml-auto md:ml-0 rounded-full bg-accent px-4 py-2 text-sm font-semibold text-accent-ink transition hover:bg-accent-soft"
+          >
+            Sign in
+          </Link>
+        )}
       </div>
 
       <nav className="mx-auto flex max-w-7xl items-center gap-1 px-4 sm:px-6">

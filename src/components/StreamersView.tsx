@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { STREAMERS, CREW_STREAMERS, TOTAL_STREAMERS } from "@/lib/streamers";
 import { useKickMap } from "./KickProvider";
 import StreamerCard, { CardSkeleton } from "./StreamerCard";
+import StreamerDetail from "./StreamerDetail";
 import type { Streamer } from "@/lib/types";
 
 function SectionTitle({ children, count }: { children: React.ReactNode; count?: number }) {
@@ -24,6 +25,7 @@ export default function StreamersView() {
   const [localQ, setLocalQ] = useState("");
   const { live, ready } = useKickMap();
   const [showAllOffline, setShowAllOffline] = useState(false);
+  const [detail, setDetail] = useState<Streamer | null>(null);
 
   const q = (params.get("q") ?? localQ).toLowerCase().trim();
   const match = (s: Streamer) =>
@@ -85,7 +87,7 @@ export default function StreamersView() {
           <div className="mt-5 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
             {crew.map((s) => (
               <div key={s.slug} className="rise">
-                <StreamerCard streamer={s} />
+                <StreamerCard streamer={s} onInfo={setDetail} />
               </div>
             ))}
           </div>
@@ -100,7 +102,7 @@ export default function StreamersView() {
             ? Array.from({ length: 8 }).map((_, i) => <CardSkeleton key={i} />)
             : liveList.map((s) => (
                 <div key={s.slug} className="rise">
-                  <StreamerCard streamer={s} />
+                  <StreamerCard streamer={s} onInfo={setDetail} />
                 </div>
               ))}
         </div>
@@ -116,7 +118,7 @@ export default function StreamersView() {
           <div className="mt-5 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
             {offlineShown.map((s) => (
               <div key={s.slug} className="rise">
-                <StreamerCard streamer={s} />
+                <StreamerCard streamer={s} onInfo={setDetail} />
               </div>
             ))}
           </div>
@@ -132,6 +134,8 @@ export default function StreamersView() {
           )}
         </section>
       )}
+
+      {detail && <StreamerDetail streamer={detail} onClose={() => setDetail(null)} />}
     </div>
   );
 }

@@ -1,5 +1,8 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import Logo from "@/components/Logo";
+import KickLoginButton from "@/components/KickLoginButton";
+import LoginErrorNotice from "@/components/LoginErrorNotice";
 
 export const metadata = { title: "Sign in — ChickenAndy" };
 
@@ -9,18 +12,15 @@ export default function LoginPage() {
       <Logo />
       <div className="mt-8 w-full rounded-2xl border border-line bg-panel p-8">
         <h1 className="font-display text-2xl font-extrabold uppercase">Sign in</h1>
-        <p className="mt-1 text-sm text-dim">Sign in to chat and sync your favourites.</p>
+        <p className="mt-1 text-sm text-dim">Sign in with Kick to chat and sync your favourites.</p>
 
-        <button
-          type="button"
-          disabled
-          className="mt-6 flex w-full items-center justify-center gap-2 rounded-lg bg-kick px-4 py-3 text-sm font-bold text-black opacity-90"
-        >
-          <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor" aria-hidden>
-            <path d="M3 3h5v6l4-6h6l-6 9 6 9h-6l-4-6v6H3z" />
-          </svg>
-          Continue with Kick
-        </button>
+        <Suspense fallback={null}>
+          <LoginErrorNotice />
+        </Suspense>
+
+        <div className="mt-6">
+          <KickLoginButton />
+        </div>
 
         <div className="my-5 flex items-center gap-3 text-xs text-faint">
           <span className="h-px flex-1 bg-line" />
@@ -49,9 +49,8 @@ export default function LoginPage() {
         </form>
 
         <p className="mt-5 rounded-lg border border-line bg-elevated/60 p-3 text-xs text-faint">
-          Demo build — authentication is not wired to a backend. Real Kick sign-in would use OAuth
-          2.1 + PKCE via id.kick.com with a serverless token exchange. Your favourites already work
-          and are stored locally.
+          Email/password is a demo — real auth is the &ldquo;Continue with Kick&rdquo; button above,
+          using Kick OAuth 2.1 + PKCE with a serverless token exchange (Vercel only).
         </p>
       </div>
 
