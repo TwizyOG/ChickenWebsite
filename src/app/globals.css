@@ -1,0 +1,168 @@
+@import "tailwindcss";
+
+/* =============================================================================
+   ChickenAndy — Live Streamer Directory (clone)
+   Design tokens extracted from chickenandy.vercel.app:
+   near-black surface, gold accent, Lexend body / Oxanium display.
+   ========================================================================== */
+@theme {
+  --color-bg: #0a0a0b;
+  --color-panel: #101012;
+  --color-elevated: #16161a;
+  --color-line: #24242b;
+  --color-ink: #f5f5f5;
+  --color-dim: #a1a1aa;
+  --color-faint: #71717a;
+  --color-accent: #e3b23c;
+  --color-accent-soft: #f0c96b;
+  --color-accent-ink: #0a0a0b;
+  --color-mature: #dc2626;
+  --color-kick: #53fc18;
+  --color-live: #ef4444;
+
+  --radius-card: 10px;
+}
+
+/* Fonts are injected as CSS variables by next/font in layout.tsx */
+@theme inline {
+  --font-sans: var(--font-lexend), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-oxanium), var(--font-lexend), sans-serif;
+}
+
+html {
+  color-scheme: dark;
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Thin dark scrollbars to match the shell */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #2a2a31 transparent;
+}
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-thumb {
+  background: #2a2a31;
+  border-radius: 9999px;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: #3a3a44;
+}
+
+/* Display headings: Oxanium, heavy, uppercase */
+.font-display {
+  font-family: var(--font-display);
+}
+
+/* --- skeleton shimmer -------------------------------------------------- */
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background: #17171c;
+}
+.skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.06),
+    transparent
+  );
+  animation: shimmer 1.4s infinite;
+}
+
+/* --- live pulse dot ---------------------------------------------------- */
+@keyframes pulse-ring {
+  0% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.55);
+  }
+  70% {
+    box-shadow: 0 0 0 6px rgba(239, 68, 68, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+  }
+}
+.live-dot {
+  animation: pulse-ring 1.8s infinite;
+}
+
+/* --- header banner marquee (streamer-face collage strip) --------------- */
+@keyframes banner-scroll {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: -1200px 0;
+  }
+}
+
+/* --- chat message enter ------------------------------------------------ */
+@keyframes chat-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.chat-line {
+  animation: chat-in 0.18s ease-out;
+}
+
+/* --- fade/rise reveal for grids --------------------------------------- */
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.rise {
+  animation: rise 0.4s ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::after,
+  *::before {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* MapLibre popup/control dark tweaks (used on the RV X map page) */
+.maplibregl-ctrl-group {
+  background: #16161a !important;
+  border: 1px solid var(--color-line) !important;
+}
+.maplibregl-ctrl-group button + button {
+  border-top: 1px solid var(--color-line) !important;
+}
+.maplibregl-ctrl button .maplibregl-ctrl-icon {
+  filter: invert(1) hue-rotate(180deg);
+}
