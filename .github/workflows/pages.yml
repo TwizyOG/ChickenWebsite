@@ -32,6 +32,8 @@ jobs:
         env:
           BUILD_TARGET: export
           PAGES_BASE_PATH: /ChickenWebsite
+          NEXT_PUBLIC_SUPABASE_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ vars.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
         run: npm run build
       - name: Disable Jekyll
         run: touch out/.nojekyll
