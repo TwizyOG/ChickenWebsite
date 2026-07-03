@@ -34,6 +34,12 @@ jobs:
           PAGES_BASE_PATH: /ChickenWebsite
           NEXT_PUBLIC_SUPABASE_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL }}
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ vars.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          # The HLS master-manifest CORS shim (/api/hls) is a server route, so
+          # it doesn't exist in this static export. Point the player at the
+          # Vercel deployment's shim so HD quality-lock still works on Pages.
+          # (If the deployment is unavailable the player falls back to Kick's
+          # official embed.) Overridable via repo variable HLS_PROXY_ORIGIN.
+          NEXT_PUBLIC_HLS_PROXY: ${{ vars.HLS_PROXY_ORIGIN || 'https://chickenwebsite.vercel.app' }}
         run: npm run build
       - name: Disable Jekyll
         run: touch out/.nojekyll

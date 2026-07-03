@@ -45,7 +45,14 @@ const NAMES: Record<string, string> = {
   oceanadventures: "oceanadventures",
 };
 
-/** All 113 unique Kick slugs (offline roster + currently-live channels). */
+/* Unique Kick slugs (offline roster + currently-live channels).
+   Rechecked against Kick 2026-07-03: five original slugs 404'd (channel gone
+   or renamed). `kodakblack11` was the real Kodak Black under a new handle and
+   is corrected to `kodakblack` (verified, 14k+ followers). The other four had
+   no confident match on Kick — only tiny unrelated accounts — so rather than
+   fabricate an identity they're dropped (a 404 channel can never show a real
+   avatar/name): jacob_live, official_ebz, sainttenn, strokeoff. Re-add here if
+   their current handles are known. */
 const SLUGS: string[] = [
   "abz", "ac7ionman", "adrianahlee", "akibell", "alchybooned", "aldito1k",
   "alexis", "aloeirl", "ambish", "amouranth", "andy", "asianandy", "attilabak",
@@ -54,16 +61,16 @@ const SLUGS: string[] = [
   "cellfmade", "chickenandy", "chickenandytv", "cristravels", "danihru", "days",
   "deepak", "eddie", "erectdictator", "feef", "flexiefae", "floridabo",
   "gagantv", "garydavid", "gewn", "girit", "hamptonbrando", "hanridge",
-  "hyubsama", "iceposeidon", "iduncle", "iholly", "jackie", "jacob_live",
+  "hyubsama", "iceposeidon", "iduncle", "iholly", "jackie",
   "jandro", "jjstream", "jollyrancherzoo", "kadobell", "kangjoel", "kick_clipz",
-  "kikikrazy", "kimmee", "kinocasinogaming", "kodakblack11", "krispyw",
+  "kikikrazy", "kimmee", "kinocasinogaming", "kodakblack", "krispyw",
   "lifeismizzy", "lordhito", "loulz", "luplupka", "mercoffdaperc", "mhyochi",
   "minettelive", "moises", "mruktikktokofficial", "nanapips", "nanatty", "nedx",
   "nerdballertv", "nickfuentes", "nicklee", "nickwhite", "oceanadventures",
-  "official_ebz", "oggeezerlive", "onesonicirl", "oumb", "peggyb", "peteyplastic",
-  "pigeonvizion", "ricogotti", "ryanheinz", "sainttenn", "saltygummibear",
+  "oggeezerlive", "onesonicirl", "oumb", "peggyb", "peteyplastic",
+  "pigeonvizion", "ricogotti", "ryanheinz", "saltygummibear",
   "sampanday", "samxfrank", "santamaria", "shoovy", "shotime", "sjc_official",
-  "stevewilldoit", "strokeoff", "suspendas", "suziesmalls", "sweatyvibin",
+  "stevewilldoit", "suspendas", "suziesmalls", "sweatyvibin",
   "sweeterin", "taemin1998", "tazo", "thewildlatina", "toneirl", "trausi",
   "tridentchill", "vnthony", "withjenny", "woodbaby", "woozuh", "wvagabond",
   "xenathewitch", "zeroxhero", "zuesirl",

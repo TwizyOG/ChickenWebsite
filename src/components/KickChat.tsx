@@ -2,6 +2,8 @@
 
 import { useEffect, useMemo, useRef, useState, Fragment } from "react";
 import { currentKickUser } from "@/lib/kickAuth";
+import ChatBadges, { type ChatBadgeData } from "./ChatBadges";
+import type { SubBadge } from "@/lib/types";
 
 /* Kick chat rides on a public Pusher socket (same one kick.com's own web client
    uses). We resolve the channel's chatroom id, subscribe read-only, and render
@@ -14,42 +16,17 @@ const PUSHER_KEY = "32cbd69e4b950bf97679"; // Kick's public Pusher app key (us2)
 const PUSHER_URL = `wss://ws-us2.pusher.com/app/${PUSHER_KEY}?protocol=7&client=js&version=8.4.0&flash=false`;
 const MAX_MESSAGES = 120;
 
-type Badge = { type: string; text?: string; count?: number };
 type Msg = {
   id: string;
   username: string;
   color: string;
-  badges: Badge[];
+  badges: ChatBadgeData[];
   content: string;
 };
 
 const EMOTE = /\[emote:(\d+):([^\]]+)\]/g;
 
-function badgeStyle(type: string): { label: string; cls: string } | null {
-  switch (type) {
-    case "broadcaster":
-      return { label: "HOST", cls: "bg-mature/90 text-white" };
-    case "moderator":
-      return { label: "MOD", cls: "bg-kick/20 text-kick" };
-    case "vip":
-      return { label: "VIP", cls: "bg-fuchsia-500/20 text-fuchsia-300" };
-    case "og":
-      return { label: "OG", cls: "bg-sky-500/20 text-sky-300" };
-    case "founder":
-      return { label: "FDR", cls: "bg-amber-500/20 text-amber-300" };
-    case "subscriber":
-    case "sub_gifter":
-      return { label: "SUB", cls: "bg-accent/20 text-accent" };
-    case "verified":
-      return { label: "✓", cls: "bg-accent text-accent-ink" };
-    case "staff":
-      return { label: "STAFF", cls: "bg-emerald-500/20 text-emerald-300" };
-    default:
-      return null;
-  }
-}
-
-function ChatLine({ m }: { m: Msg }) {
+function ChatLine({ m, subBadges }: { m: Msg; subBadges: SubBadge[] }) {
   const parts = useMemo(() => {
     const nodes: React.ReactNode[] = [];
     let last = 0;
@@ -77,20 +54,8 @@ function ChatLine({ m }: { m: Msg }) {
 
   return (
     <div className="chat-line px-3 py-1 text-sm leading-snug">
-      {m.badges.map((b, i) => {
-        const s = badgeStyle(b.type);
-        if (!s) return null;
-        return (
-          <span
-            key={i}
-            className={`mr-1 inline-block rounded px-1 py-px text-[9px] font-bold leading-none ${s.cls}`}
-            title={b.text || b.type}
-          >
-            {s.label}
-            {b.type === "subscriber" && b.count ? b.count : ""}
-          </span>
-        );
-      })}
+      {/* icon badges, exactly like Kick's chat (channel sub art included) */}
+      <ChatBadges badges={m.badges} subBadges={subBadges} />
       <span className="font-semibold" style={{ color: m.color }}>
         {m.username}
       </span>
@@ -106,6 +71,7 @@ function ChatLine({ m }: { m: Msg }) {
 
 export default function KickChat({ slug }: { slug: string }) {
   const [messages, setMessages] = useState<Msg[]>([]);
+  const [subBadges, setSubBadges] = useState<SubBadge[]>([]);
   const [mode, setMode] = useState<"connecting" | "live" | "iframe">("connecting");
   const scrollRef = useRef<HTMLDivElement>(null);
   const atBottom = useRef(true);
@@ -161,10 +127,22 @@ export default function KickChat({ slug }: { slug: string }) {
           headers: { accept: "application/json" },
         });
         if (!r.ok) throw new Error(`channel ${r.status}`);
-        const j = (await r.json()) as { chatroom?: { id?: number } };
+        const j = (await r.json()) as {
+          chatroom?: { id?: number };
+          subscriber_badges?: { months?: number; badge_image?: { src?: string } }[];
+        };
         const chatroomId = j?.chatroom?.id;
         if (!chatroomId) throw new Error("no chatroom");
         if (closed) return;
+
+        // This channel's own subscriber badge art (months → image), used by
+        // ChatBadges to pick the right tier per subscriber, like Kick does.
+        setSubBadges(
+          (Array.isArray(j.subscriber_badges) ? j.subscriber_badges : [])
+            .map((b) => ({ months: Number(b?.months ?? 0), src: String(b?.badge_image?.src ?? "") }))
+            .filter((b) => b.src)
+            .sort((a, b) => a.months - b.months),
+        );
 
         ws = new WebSocket(PUSHER_URL);
         ws.onopen = () => {
@@ -200,7 +178,9 @@ export default function KickChat({ slug }: { slug: string }) {
             }
             const sender = (d.sender ?? {}) as Record<string, unknown>;
             const identity = (sender.identity ?? {}) as Record<string, unknown>;
-            const badges = Array.isArray(identity.badges) ? (identity.badges as Badge[]) : [];
+            const badges = Array.isArray(identity.badges)
+              ? (identity.badges as ChatBadgeData[])
+              : [];
             const msg: Msg = {
               id: String(d.id ?? Math.random()),
               username: String(sender.username ?? "anon"),
@@ -281,7 +261,7 @@ export default function KickChat({ slug }: { slug: string }) {
                 {mode === "connecting" ? "Connecting to live chat…" : "Waiting for messages…"}
               </div>
             ) : (
-              messages.map((m) => <ChatLine key={m.id} m={m} />)
+              messages.map((m) => <ChatLine key={m.id} m={m} subBadges={subBadges} />)
             )}
           </div>
           <div className="border-t border-line p-3">

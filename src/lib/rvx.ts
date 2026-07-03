@@ -80,17 +80,25 @@ export type CrewMember = {
 };
 
 export const CREW: CrewMember[] = [
+  /* ---- current crew (still on the trip) ---- */
   { slug: "chickenandytv", name: "ChickenAndy", role: "Driver", bio: "The man behind the wheel. Streaming the whole ride on Kick." },
   { slug: "krispyw", name: "KrispyW", role: "Chaos dept.", bio: "If a bet exists, Krispy has already lost it." },
   { slug: "ryanheinz", name: "Ryan Heinz", role: "Camera", bio: "Second angle, drone shots, beignet records." },
   { slug: null, name: "Cam", role: "Logistics", bio: "Keeps the rig rolling and the cooler full." },
   { slug: "kikikrazy", name: "KikiKrazy", role: "Crew", bio: "IRL streamer bringing her own lens to the road trip." },
-  { slug: "tazo", name: "Tazo", role: "Crew", bio: "On the road with the crew for the Gulf run." },
-  { slug: "oceanadventures", name: "Ocean Adventures", role: "Special guest", bio: "Joined the rig for the Florida legs." },
-  { slug: "toneirl", name: "Tone", role: "Navigator", bio: "Reads the maps, picks the detours, owns the aux.", departed: true },
+  { slug: "toneirl", name: "Tone", role: "Navigator", bio: "Reads the maps, picks the detours, owns the aux." },
+  /* ---- past crew (departed the trip) ---- */
+  { slug: "tazo", name: "Tazo", role: "Crew", bio: "On the road with the crew for the Gulf run.", departed: true },
+  { slug: "oceanadventures", name: "Ocean Adventures", role: "Special guest", bio: "Joined the rig for the Florida legs.", departed: true },
   { slug: "sainttenn", name: "Saint Tenn", role: "Guest", bio: "Rolled with the crew through the early legs of the trip.", departed: true },
   { slug: "suziesmalls", name: "Suzie Smalls", role: "Guest", bio: "Joined the rig for a stretch and brought the energy.", departed: true },
 ];
+
+/** Kick slugs of crew still on the trip — drives which channels' clips surface
+    in Clips & VODs (past crew's clips are dropped). */
+export const CURRENT_CREW_SLUGS = new Set(
+  CREW.filter((m) => !m.departed && m.slug).map((m) => m.slug as string),
+);
 
 /* ---- sponsors (from data.js SPONSORS) ---------------------------------- */
 export const SPONSORS = [
@@ -164,6 +172,7 @@ export type Media = {
   views: number;
   date: string;
   city: string;
+  cityId: string;
   thumbHue: number;
 };
 
@@ -200,21 +209,26 @@ const CLIP_SEED: [string, string, string, number][] = [
 
 const SPAN = TRIP_TODAY.getTime() - TRIP_START.getTime();
 
-export const RVX_CLIPS: Media[] = CLIP_SEED.map(([title, channel, duration, views], i) => {
-  const d = new Date(TRIP_START.getTime() + Math.floor(((i + 0.5) / CLIP_SEED.length) * SPAN));
-  const c = cityForDate(d);
-  return {
-    id: `clip_${String(i + 1).padStart(3, "0")}`,
-    kind: "clip",
-    title,
-    channel,
-    duration,
-    views,
-    date: fmt(d),
-    city: `${c.name}, ${c.region}`,
-    thumbHue: 30 + ((i * 37) % 60),
-  };
-});
+export const RVX_CLIPS: Media[] = CLIP_SEED
+  .map(([title, channel, duration, views], i) => {
+    const d = new Date(TRIP_START.getTime() + Math.floor(((i + 0.5) / CLIP_SEED.length) * SPAN));
+    const c = cityForDate(d);
+    return {
+      id: `clip_${String(i + 1).padStart(3, "0")}`,
+      kind: "clip" as const,
+      title,
+      channel,
+      duration,
+      views,
+      date: fmt(d),
+      city: `${c.name}, ${c.region}`,
+      cityId: c.id,
+      thumbHue: 30 + ((i * 37) % 60),
+    };
+  })
+  // Only surface clips from crew still on the trip — past crew (Tazo, Ocean
+  // Adventures, Saint Tenn…) drop out; ChickenAndy + current crew stay.
+  .filter((m) => CURRENT_CREW_SLUGS.has(m.channel));
 
 export const RVX_VODS: Media[] = (() => {
   const out: Media[] = [];
@@ -233,11 +247,30 @@ export const RVX_VODS: Media[] = (() => {
       views: 2400 + ((dayNum * 997) % 9000),
       date: fmt(d),
       city: `${c.name}, ${c.region}`,
+      cityId: c.id,
       thumbHue: 30 + ((dayNum * 23) % 60),
     });
   }
   return out.reverse(); // newest first
 })();
+
+/* ---- per-city media (drives the map's click-a-city → VODs/Clips sheet) ---- */
+
+/** The trip's "today" — the open end of the current stop's date range. */
+export const RVX_TODAY = TRIP_TODAY;
+
+/** Parse an "MM/DD/YY" media/city date into a Date. */
+export const parseMDY = (s: string): Date => parse(s);
+
+export const cityById = (id: string): City | undefined => CITIES.find((c) => c.id === id);
+
+/** All VODs + clips recorded while the crew was parked at a given stop. */
+export function mediaForCity(cityId: string): { vods: Media[]; clips: Media[] } {
+  return {
+    vods: RVX_VODS.filter((m) => m.cityId === cityId),
+    clips: RVX_CLIPS.filter((m) => m.cityId === cityId),
+  };
+}
 
 /** Months the trip spans, for the media calendar. */
 export function tripMonths(): { y: number; m: number; label: string }[] {

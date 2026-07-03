@@ -40,7 +40,7 @@ function MediaCard({ m }: { m: Media }) {
 }
 
 export default function RvxMedia() {
-  const [kind, setKind] = useState<"clips" | "vods">("clips");
+  const [kind, setKind] = useState<"clips" | "vods">("vods");
   const months = useMemo(() => tripMonths(), []);
   const [monthIdx, setMonthIdx] = useState(Math.max(0, months.length - 1));
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
@@ -90,7 +90,7 @@ export default function RvxMedia() {
       {/* left: toggle + calendar */}
       <div>
         <div className="inline-flex rounded-full border border-line bg-elevated p-1">
-          {(["clips", "vods"] as const).map((k) => (
+          {(["vods", "clips"] as const).map((k) => (
             <button
               key={k}
               onClick={() => changeKind(k)}

@@ -29,8 +29,12 @@ export function KickProvider({ children }: { children: React.ReactNode }) {
     if (flushTimer.current) return;
     flushTimer.current = setTimeout(() => {
       flushTimer.current = null;
-      setLive((prev) => ({ ...prev, ...pending.current }));
+      // Capture + reset the buffer BEFORE setLive. The functional updater runs
+      // later (React defers it), so reading pending.current *inside* it would
+      // see an already-cleared object and silently drop the whole batch.
+      const batch = pending.current;
       pending.current = {};
+      setLive((prev) => ({ ...prev, ...batch }));
     }, 120);
   }, []);
 
@@ -46,15 +50,18 @@ export function KickProvider({ children }: { children: React.ReactNode }) {
       { concurrency: 6, signal: ctrl.signal },
     ).finally(() => {
       if (!ctrl.signal.aborted) {
-        // final flush
-        setLive((prev) => ({ ...prev, ...pending.current }));
+        const batch = pending.current;
         pending.current = {};
+        setLive((prev) => ({ ...prev, ...batch }));
         setReady(true);
       }
     });
     return () => {
       ctrl.abort();
       if (flushTimer.current) clearTimeout(flushTimer.current);
+      // Null it (not just clear) so scheduleFlush isn't permanently blocked by a
+      // stale ref after a remount (React strict-mode / fast-refresh).
+      flushTimer.current = null;
     };
   }, [scheduleFlush]);
 

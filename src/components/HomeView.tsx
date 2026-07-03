@@ -74,7 +74,7 @@ export default function HomeView() {
             ? Array.from({ length: 6 }).map((_, i) => <CardSkeleton key={i} />)
             : liveList.slice(0, visible).map((s) => (
                 <div key={s.slug} className="rise">
-                  <StreamerCard streamer={s} onSelect={selectFeatured} onInfo={setDetail} />
+                  <StreamerCard streamer={s} onSelect={selectFeatured} onInfo={setDetail} liveThumb />
                 </div>
               ))}
         </div>

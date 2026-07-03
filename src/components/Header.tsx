@@ -10,7 +10,7 @@ import { useAuth, displayName } from "./AuthProvider";
 const NAV = [
   { href: "/", label: "Home" },
   { href: "/streamers", label: "Streamers" },
-  { href: "/map", label: "RV X" },
+  { href: "/rvx", label: "RV X" },
   { href: "/community", label: "Community" },
   { href: "/store", label: "Store" },
   { href: "/about", label: "About" },

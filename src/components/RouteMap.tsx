@@ -3,7 +3,8 @@
 import React from "react";
 import maplibregl, { type StyleSpecification } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
-import { CITIES, MAP_SOURCES as M, type City } from "@/lib/rvx";
+import { CITIES, MAP_SOURCES as M, mediaForCity, type City } from "@/lib/rvx";
+import CityMedia from "./CityMedia";
 
 /* RV X interactive route map — ported from the original site's RouteMap.jsx.
    Free/keyless sources: CARTO dark raster, EOX satellite, Mapterhorn DEM (3D),
@@ -119,6 +120,7 @@ export default function RouteMap() {
   const [mode, setMode] = React.useState<"2d" | "sat" | "3d">("sat");
   const [legs, setLegs] = React.useState<[number, number][][] | null>(null);
   const [active, setActive] = React.useState<City | null>(null);
+  const [menuCity, setMenuCity] = React.useState<City | null>(null);
   const [failed, setFailed] = React.useState(false);
 
   const addOverlays = React.useCallback((map: maplibregl.Map) => {
@@ -274,6 +276,9 @@ export default function RouteMap() {
     }
   }, [mode]);
 
+  const activeMedia = active ? mediaForCity(active.id) : null;
+  const activePreview = activeMedia ? [...activeMedia.vods, ...activeMedia.clips].slice(0, 3) : [];
+
   if (failed) {
     return (
       <div className="grid h-full place-items-center rounded-2xl border border-line bg-panel p-8 text-center text-sm text-dim">
@@ -300,7 +305,7 @@ export default function RouteMap() {
         ))}
       </div>
 
-      {active && (
+      {active && activeMedia && (
         <div className="absolute bottom-4 left-4 z-10 w-72 rounded-xl border border-line bg-panel/95 p-4 backdrop-blur">
           <div className="flex items-center justify-between">
             <span className="font-display text-xs font-bold uppercase tracking-widest text-accent">
@@ -318,8 +323,39 @@ export default function RouteMap() {
             {active.start} → {active.end || "now"}
           </p>
           <p className="mt-2 text-sm text-dim">{active.blurb}</p>
+
+          {activePreview.length > 0 && (
+            <div className="mt-3 space-y-1.5">
+              {activePreview.map((m) => (
+                <button
+                  key={m.id}
+                  type="button"
+                  onClick={() => setMenuCity(active)}
+                  className="flex w-full items-center gap-2 rounded-md border border-line bg-elevated/60 px-2 py-1.5 text-left transition hover:border-accent/40"
+                >
+                  <span className="rounded bg-black/50 px-1 text-[9px] font-bold uppercase text-accent">
+                    {m.kind}
+                  </span>
+                  <span className="min-w-0 flex-1 truncate text-xs text-dim">{m.title}</span>
+                  <span className="shrink-0 text-[10px] text-faint">{m.duration}</span>
+                </button>
+              ))}
+            </div>
+          )}
+
+          <button
+            type="button"
+            onClick={() => setMenuCity(active)}
+            className="mt-3 w-full rounded-full bg-accent px-3 py-2 text-xs font-semibold uppercase tracking-wide text-accent-ink transition hover:bg-accent-soft"
+          >
+            {activeMedia.vods.length + activeMedia.clips.length > 0
+              ? `All ${activeMedia.vods.length} VODs & ${activeMedia.clips.length} clips →`
+              : "No media at this stop yet"}
+          </button>
         </div>
       )}
+
+      {menuCity && <CityMedia city={menuCity} onClose={() => setMenuCity(null)} />}
     </div>
   );
 }

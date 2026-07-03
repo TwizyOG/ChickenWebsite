@@ -11,6 +11,7 @@ import { type LiveData, type Social, emptyLive } from "./types";
 
 const BASE = "https://kick.com/api/v2/channels/";
 const CACHE_TTL = 60_000; // 60s — avoid refetch storms on client navigation
+const CACHE_PREFIX = "kick2:"; // bump when LiveData gains fields (schema change)
 
 const clean = (v: unknown) =>
   String(v ?? "")
@@ -35,7 +36,7 @@ function socialLinks(user: Record<string, unknown>, slug: string): Social[] {
 function readCache(slug: string): LiveData | null {
   if (typeof sessionStorage === "undefined") return null;
   try {
-    const raw = sessionStorage.getItem(`kick:${slug}`);
+    const raw = sessionStorage.getItem(`${CACHE_PREFIX}${slug}`);
     if (!raw) return null;
     const { t, data } = JSON.parse(raw);
     if (Date.now() - t > CACHE_TTL) return null;
@@ -48,17 +49,37 @@ function readCache(slug: string): LiveData | null {
 function writeCache(slug: string, data: LiveData) {
   if (typeof sessionStorage === "undefined") return;
   try {
-    sessionStorage.setItem(`kick:${slug}`, JSON.stringify({ t: Date.now(), data }));
+    sessionStorage.setItem(`${CACHE_PREFIX}${slug}`, JSON.stringify({ t: Date.now(), data }));
   } catch {
     /* quota — fine */
+  }
+}
+
+/** The usable live thumbnail. The main channels endpoint only gives a private
+    `stream.kick.com` URL (403s off-site); the dedicated livestream endpoint
+    returns a hotlinkable `images.kick.com` frame in `data.thumbnail.src`. */
+async function fetchLiveThumb(slug: string, signal?: AbortSignal): Promise<string | null> {
+  try {
+    const r = await fetch(`${BASE}${encodeURIComponent(slug)}/livestream`, {
+      mode: "cors",
+      signal,
+      headers: { accept: "application/json" },
+    });
+    if (!r.ok) return null;
+    const j = (await r.json()) as { data?: { thumbnail?: { src?: string } } | null };
+    return j?.data?.thumbnail?.src ?? null;
+  } catch {
+    return null;
   }
 }
 
 export async function fetchKickChannel(
   slug: string,
   signal?: AbortSignal,
+  { fresh = false }: { fresh?: boolean } = {},
 ): Promise<LiveData> {
-  const cached = readCache(slug);
+  // `fresh` skips the session cache — used to re-mint an expired playback token.
+  const cached = fresh ? null : readCache(slug);
   if (cached) return cached;
 
   try {
@@ -77,9 +98,15 @@ export async function fetchKickChannel(
       ? (j.recent_categories as Record<string, unknown>[])
       : [];
     const thumb = (ls?.thumbnail ?? null) as Record<string, unknown> | null;
+    const bannerImg = (j.banner_image ?? null) as Record<string, unknown> | null;
+    const chatroom = (j.chatroom ?? null) as Record<string, unknown> | null;
+    const subBadgesRaw = Array.isArray(j.subscriber_badges)
+      ? (j.subscriber_badges as Record<string, unknown>[])
+      : [];
 
     const data: LiveData = {
       slug,
+      username: (user.username as string) || null,
       loaded: true,
       live: Boolean(ls && (ls.is_live ?? true)),
       viewers: Number(ls?.viewer_count ?? 0),
@@ -90,10 +117,24 @@ export async function fetchKickChannel(
       verified: Boolean(j.verified),
       avatar: (user.profile_pic as string) ?? null,
       thumbnail: (thumb?.url as string) ?? null,
+      liveThumbnail: null,
+      banner: (bannerImg?.url as string) ?? null,
       followers: typeof j.followers_count === "number" ? (j.followers_count as number) : null,
       bio: (user.bio as string) ?? null,
       socials: socialLinks(user, slug),
+      playbackUrl: (j.playback_url as string) ?? null,
+      chatroomId: typeof chatroom?.id === "number" ? (chatroom.id as number) : null,
+      subBadges: subBadgesRaw
+        .map((b) => ({
+          months: Number(b.months ?? 0),
+          src: String(((b.badge_image ?? {}) as Record<string, unknown>).src ?? ""),
+        }))
+        .filter((b) => b.src)
+        .sort((a, b) => a.months - b.months),
     };
+    // Only live channels have a frame — one extra request per live channel
+    // (a handful), skipped for the offline majority.
+    if (data.live) data.liveThumbnail = await fetchLiveThumb(slug, signal);
     writeCache(slug, data);
     return data;
   } catch (e) {
@@ -102,27 +143,63 @@ export async function fetchKickChannel(
   }
 }
 
-/** Hydrate many channels with a bounded worker pool; calls onEach as each lands. */
+/** Hydrate many channels with a bounded worker pool; calls onEach as each lands.
+    Failed fetches get two gentler retry rounds — bursting the whole roster can
+    trip Kick's rate limiting for a chunk of channels, which is the difference
+    between "a couple of fallback cards" and "half the directory shows initials
+    instead of real avatars". Only after the retries do failures surface. */
 export async function hydratePool(
   slugs: string[],
   onEach: (data: LiveData) => void,
   { concurrency = 6, signal }: { concurrency?: number; signal?: AbortSignal } = {},
 ): Promise<void> {
-  const queue = [...slugs];
-  const worker = async () => {
-    while (queue.length) {
-      if (signal?.aborted) return;
-      const slug = queue.shift();
-      if (!slug) return;
-      try {
-        const data = await fetchKickChannel(slug, signal);
-        if (!signal?.aborted) onEach(data);
-      } catch {
-        /* aborted or failed — skip */
+  let failed: string[] = [];
+
+  const run = async (list: string[], conc: number) => {
+    const queue = [...list];
+    const worker = async () => {
+      while (queue.length) {
+        if (signal?.aborted) return;
+        const slug = queue.shift();
+        if (!slug) return;
+        try {
+          const data = await fetchKickChannel(slug, signal);
+          if (signal?.aborted) return;
+          if (data.failed) failed.push(slug);
+          else onEach(data);
+        } catch {
+          /* aborted — skip */
+        }
       }
-    }
+    };
+    await Promise.all(Array.from({ length: Math.min(conc, list.length) }, worker));
   };
-  await Promise.all(Array.from({ length: Math.min(concurrency, slugs.length) }, worker));
+
+  await run(slugs, concurrency);
+
+  for (const delay of [1500, 4000]) {
+    if (signal?.aborted || failed.length === 0) break;
+    await new Promise((r) => setTimeout(r, delay));
+    const round = failed;
+    failed = [];
+    await run(round, 3);
+  }
+
+  // Whatever still failed is delivered as-is so cards show the fallback state.
+  if (!signal?.aborted) {
+    for (const slug of failed) onEach({ ...emptyLive(slug), loaded: true, failed: true });
+  }
+}
+
+/** Build the playable master-manifest URL for hls.js from Kick's raw
+    `playback_url`. Kick's IVS master is the only stream resource without
+    permissive CORS, so it's relayed through our same-origin `/api/hls` shim;
+    the media playlists + segments it points at are already `ACAO:*` and load
+    browser-direct. On the static Pages export (no server route) this points at
+    the Vercel deployment's shim via NEXT_PUBLIC_HLS_PROXY. */
+export function hlsMasterUrl(playbackUrl: string): string {
+  const base = (process.env.NEXT_PUBLIC_HLS_PROXY || "").replace(/\/$/, "");
+  return `${base}/api/hls?u=${encodeURIComponent(playbackUrl)}`;
 }
 
 /** Compact viewer/follower formatting: 1200 → "1.2K", 1_500_000 → "1.5M". */

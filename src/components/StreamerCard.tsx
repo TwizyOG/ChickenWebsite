@@ -23,23 +23,32 @@ export default function StreamerCard({
   streamer,
   onSelect,
   onInfo,
+  liveThumb = false,
 }: {
   streamer: Streamer;
   onSelect?: (slug: string) => void;
   onInfo?: (streamer: Streamer) => void;
+  /** Home page: show the real live-stream frame (`images.kick.com`, from the
+      livestream endpoint), falling back to the channel banner, then the avatar.
+      Elsewhere the card keeps its avatar treatment. */
+  liveThumb?: boolean;
 }) {
-  const { slug, name } = streamer;
+  const { slug } = streamer;
   const live = useKick(slug);
   const [thumbBroken, setThumbBroken] = useState(false);
+
+  // Prefer Kick's properly-cased username once hydrated (roster name is a slug fallback).
+  const name = live.username || streamer.name;
+  const thumbSrc = liveThumb ? live.liveThumbnail || live.banner : live.thumbnail;
 
   return (
     <div className="group relative overflow-hidden rounded-card border border-line bg-elevated transition hover:border-accent/40 hover:shadow-[0_0_0_1px_rgba(227,178,60,0.15)]">
       {/* thumbnail */}
       <div className="relative aspect-video overflow-hidden bg-black">
-        {live.live && live.thumbnail && !thumbBroken ? (
+        {live.live && thumbSrc && !thumbBroken ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
-            src={live.thumbnail}
+            src={thumbSrc}
             alt={`${name} stream thumbnail`}
             loading="lazy"
             referrerPolicy="no-referrer"

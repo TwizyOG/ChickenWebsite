@@ -46,8 +46,9 @@ export default function StreamerDetail({
   streamer: Streamer;
   onClose: () => void;
 }) {
-  const { slug, name } = streamer;
+  const { slug } = streamer;
   const live = useKick(slug);
+  const name = live.username || streamer.name;
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();

@@ -1,5 +1,4 @@
 import PagePlaceholder from "@/components/PagePlaceholder";
-import KickEventsPanel from "@/components/KickEventsPanel";
 
 export const metadata = { title: "My account — ChickenAndy" };
 
@@ -7,12 +6,13 @@ export default function AccountPage() {
   return (
     <PagePlaceholder eyebrow="Account" title="My account">
       <p>
-        Your favourited streamers are stored locally in your browser. Sign in with Kick to enable
-        live event webhooks for your channel — they subscribe automatically on first sign-in.
+        Your favourited streamers are stored locally in this browser — tap the heart on any card
+        to pin it to the top of the directory.
       </p>
-      <div className="pt-2">
-        <KickEventsPanel />
-      </div>
+      <p>
+        Sign in with Kick to chat in stream chats under your Kick name. Everything else is wired
+        up automatically behind the scenes.
+      </p>
     </PagePlaceholder>
   );
 }
