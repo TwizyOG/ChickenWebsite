@@ -144,9 +144,116 @@ export function buildTimeline(): TimelineDay[] {
       const c = cityForDate(d);
       return {
         day,
-        date: `${pad(d.getMonth() + 1)}/${pad(d.getDate())}/${String(d.getFullYear()).slice(2)}`,
+        date: fmt(d),
         city: `${c.name}, ${c.region}`,
         note: DAY_NOTES[day],
       };
     });
+}
+
+/* ---- clips + VODs (ported from data.js, mapped across the RV X trip) ----- */
+const fmt = (d: Date) => `${pad(d.getMonth() + 1)}/${pad(d.getDate())}/${String(d.getFullYear()).slice(2)}`;
+const TRIP_TODAY = new Date(2026, 6, 3); // 07/03/26
+
+export type Media = {
+  id: string;
+  kind: "clip" | "vod";
+  title: string;
+  channel: string;
+  duration: string;
+  views: number;
+  date: string;
+  city: string;
+  thumbHue: number;
+};
+
+const CLIP_SEED: [string, string, string, number][] = [
+  ["Andy vs the parallel park", "chickenandytv", "1:12", 48200],
+  ["\"WE LIVE IN A VAN\" — full meltdown", "chickenandytv", "0:58", 36900],
+  ["Saint Tenn cooks in the RV kitchen", "sainttenn", "1:14", 11200],
+  ["Krispy loses the bet on Frenchmen St", "krispyw", "2:04", 28800],
+  ["Cop knocks on the RV at 2AM", "chickenandytv", "1:47", 95400],
+  ["Saint Tenn vs the inflatable pool", "sainttenn", "0:44", 9800],
+  ["Tone backflips off the dock", "toneirl", "0:41", 22100],
+  ["Generator dies mid-stream", "chickenandytv", "1:25", 18700],
+  ["Ryan orders 40 beignets", "ryanheinz", "1:03", 15400],
+  ["Gator on the road??", "chickenandytv", "0:52", 67300],
+  ["The Tampa boat day disaster", "chickenandytv", "3:18", 41200],
+  ["Tazo finally drives", "tazo", "1:36", 12800],
+  ["Brass band takes over the stream", "chickenandytv", "2:22", 19600],
+  ["Andy tries to merge for 9 minutes", "krispyw", "1:54", 30500],
+  ["Free ice cream from a viewer", "toneirl", "0:47", 9400],
+  ["RV almost gets towed AGAIN", "chickenandytv", "2:09", 52600],
+  ["6th Street send-off", "chickenandytv", "1:31", 24300],
+  ["Sunset drive into Miami", "chickenandytv", "0:59", 14100],
+  ["Tone vs the GPS", "toneirl", "1:18", 11200],
+  ["Krispy karaoke at the truck stop", "krispyw", "2:41", 17800],
+  ["Drone shot over the causeway", "ryanheinz", "0:44", 21500],
+  ["Ryan loses the drone (briefly)", "ryanheinz", "1:51", 13600],
+  ["Krispy reads superchats wrong", "krispyw", "1:09", 8800],
+  ["Tone navigates into a cul-de-sac", "toneirl", "1:33", 16400],
+  ["Kiki finds a possum under the rig", "kikikrazy", "0:51", 19400],
+  ["Ocean Adventures does the voice", "oceanadventures", "1:23", 14700],
+  ["Kiki rates all the gas station snacks", "kikikrazy", "2:07", 21300],
+  ["South Beach marina day", "chickenandytv", "1:38", 16500],
+];
+
+const SPAN = TRIP_TODAY.getTime() - TRIP_START.getTime();
+
+export const RVX_CLIPS: Media[] = CLIP_SEED.map(([title, channel, duration, views], i) => {
+  const d = new Date(TRIP_START.getTime() + Math.floor(((i + 0.5) / CLIP_SEED.length) * SPAN));
+  const c = cityForDate(d);
+  return {
+    id: `clip_${String(i + 1).padStart(3, "0")}`,
+    kind: "clip",
+    title,
+    channel,
+    duration,
+    views,
+    date: fmt(d),
+    city: `${c.name}, ${c.region}`,
+    thumbHue: 30 + ((i * 37) % 60),
+  };
+});
+
+export const RVX_VODS: Media[] = (() => {
+  const out: Media[] = [];
+  for (let t = TRIP_START.getTime(); t <= TRIP_TODAY.getTime(); t += MS_DAY) {
+    const d = new Date(t);
+    const dayNum = Math.floor((t - TRIP_START.getTime()) / MS_DAY) + 1;
+    if (dayNum % 2 === 0 && dayNum % 6 !== 0) continue; // ~stream days
+    const c = cityForDate(d);
+    const hrs = 3 + ((dayNum * 7) % 6);
+    out.push({
+      id: `vod_${String(dayNum).padStart(3, "0")}`,
+      kind: "vod",
+      title: `Day ${dayNum} — ${c.name}, ${c.region}`,
+      channel: "chickenandytv",
+      duration: `${hrs}:${pad((dayNum * 13) % 60)}:${pad((dayNum * 29) % 60)}`,
+      views: 2400 + ((dayNum * 997) % 9000),
+      date: fmt(d),
+      city: `${c.name}, ${c.region}`,
+      thumbHue: 30 + ((dayNum * 23) % 60),
+    });
+  }
+  return out.reverse(); // newest first
+})();
+
+/** Months the trip spans, for the media calendar. */
+export function tripMonths(): { y: number; m: number; label: string }[] {
+  const out: { y: number; m: number; label: string }[] = [];
+  const seen = new Set<string>();
+  for (let t = TRIP_START.getTime(); t <= TRIP_TODAY.getTime(); t += MS_DAY) {
+    const d = new Date(t);
+    const key = `${d.getFullYear()}-${d.getMonth()}`;
+    if (!seen.has(key)) {
+      seen.add(key);
+      out.push({
+        y: d.getFullYear(),
+        m: d.getMonth(),
+        label: d.toLocaleString("en-US", { month: "long", year: "numeric" }),
+      });
+    }
+  }
+  return out;
 }

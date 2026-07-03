@@ -69,12 +69,13 @@ export default function StreamerDetail({
       aria-modal="true"
       aria-label={`${name} details`}
       onClick={onClose}
-      className="fixed inset-0 z-[90] grid place-items-center bg-bg/80 p-4 backdrop-blur-sm"
+      className="fixed inset-0 z-[90] overflow-y-auto bg-bg/80 backdrop-blur-sm"
     >
-      <div
-        onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-lg overflow-hidden rounded-2xl border border-line bg-panel"
-      >
+      <div className="flex min-h-full items-center justify-center p-4">
+        <div
+          onClick={(e) => e.stopPropagation()}
+          className="w-full max-w-lg overflow-hidden rounded-2xl border border-line bg-panel"
+        >
         {/* header banner */}
         <div className="relative h-24 bg-[radial-gradient(120%_180%_at_50%_0%,#241d10,#0c0c0f)]">
           <button
@@ -163,6 +164,7 @@ export default function StreamerDetail({
             <SocialIcon platform="kick" />
             Watch on Kick
           </a>
+        </div>
         </div>
       </div>
     </div>

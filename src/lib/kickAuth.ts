@@ -6,7 +6,7 @@
    route /api/auth/kick/callback; this file only builds the PKCE redirect. */
 
 export const KICK_AUTHORIZE = "https://id.kick.com/oauth/authorize";
-export const KICK_SCOPES = "user:read channel:read events:subscribe";
+export const KICK_SCOPES = "user:read channel:read chat:write events:subscribe";
 
 export const KICK_CLIENT_ID = process.env.NEXT_PUBLIC_KICK_CLIENT_ID ?? "";
 

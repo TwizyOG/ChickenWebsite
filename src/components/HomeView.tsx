@@ -42,12 +42,15 @@ export default function HomeView() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6">
-      {/* Featured stream (full width) */}
-      <FeaturedPlayer slug={featured} />
-
-      {/* Live chat below the player — bounded height so it scrolls internally */}
-      <div className="mt-4 h-[460px]">
-        <KickChat slug={featured} />
+      {/* Featured stream + live chat.
+          Wide/fullscreen (xl+): chat sits beside the stream.
+          Narrow: chat stacks below. Chat is height-bounded so it scrolls
+          internally instead of stretching the row. */}
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_380px] xl:items-start">
+        <FeaturedPlayer slug={featured} />
+        <div className="mt-4 h-[460px] xl:mt-0 xl:h-[600px]">
+          <KickChat slug={featured} />
+        </div>
       </div>
 
       {/* Live streamers */}

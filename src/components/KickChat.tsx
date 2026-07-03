@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, Fragment } from "react";
+import { currentKickUser } from "@/lib/kickAuth";
 
 /* Kick chat rides on a public Pusher socket (same one kick.com's own web client
    uses). We resolve the channel's chatroom id, subscribe read-only, and render
@@ -108,6 +109,43 @@ export default function KickChat({ slug }: { slug: string }) {
   const [mode, setMode] = useState<"connecting" | "live" | "iframe">("connecting");
   const scrollRef = useRef<HTMLDivElement>(null);
   const atBottom = useRef(true);
+
+  // Kick sign-in state → enables the chat input (send via /api/kick/chat)
+  const [me, setMe] = useState<string | null>(null);
+  const [draft, setDraft] = useState("");
+  const [sending, setSending] = useState(false);
+  const [sendErr, setSendErr] = useState<string | null>(null);
+
+  useEffect(() => {
+    setMe(currentKickUser());
+  }, []);
+
+  const sendMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const content = draft.trim();
+    if (!content) return;
+    setSending(true);
+    setSendErr(null);
+    try {
+      const r = await fetch("/api/kick/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ slug, content }),
+      });
+      if (r.ok) {
+        setDraft(""); // sent message echoes back via the websocket
+      } else {
+        const j = (await r.json().catch(() => ({}))) as { error?: string };
+        if (j.error === "missing_scope")
+          setSendErr("Reconnect Kick (sign out & back in) to grant chat permission.");
+        else if (j.error === "not_signed_in") setSendErr("Session expired — sign in again.");
+        else setSendErr("Couldn't send — try again.");
+      }
+    } catch {
+      setSendErr("Network error.");
+    }
+    setSending(false);
+  };
 
   useEffect(() => {
     setMessages([]);
@@ -247,12 +285,34 @@ export default function KickChat({ slug }: { slug: string }) {
             )}
           </div>
           <div className="border-t border-line p-3">
-            <a
-              href="/login"
-              className="block rounded-lg border border-accent/40 py-2.5 text-center text-sm font-semibold uppercase tracking-wide text-accent transition hover:bg-accent/10"
-            >
-              Sign in to chat
-            </a>
+            {me ? (
+              <>
+                <form onSubmit={sendMessage} className="flex items-center gap-2">
+                  <input
+                    value={draft}
+                    onChange={(e) => setDraft(e.target.value)}
+                    maxLength={500}
+                    placeholder={`Chat as ${me}…`}
+                    className="min-w-0 flex-1 rounded-lg border border-line bg-elevated px-3 py-2 text-sm outline-none focus:border-accent/60"
+                  />
+                  <button
+                    type="submit"
+                    disabled={sending || !draft.trim()}
+                    className="shrink-0 rounded-lg bg-kick px-3 py-2 text-sm font-bold text-black transition hover:brightness-95 disabled:opacity-50"
+                  >
+                    {sending ? "…" : "Send"}
+                  </button>
+                </form>
+                {sendErr && <p className="mt-1.5 text-[11px] text-mature">{sendErr}</p>}
+              </>
+            ) : (
+              <a
+                href="/login"
+                className="block rounded-lg border border-accent/40 py-2.5 text-center text-sm font-semibold uppercase tracking-wide text-accent transition hover:bg-accent/10"
+              >
+                Sign in to chat
+              </a>
+            )}
           </div>
         </>
       )}

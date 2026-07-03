@@ -6,9 +6,10 @@ import { useKick } from "./KickProvider";
 import { fmtCount } from "@/lib/kick";
 import Avatar from "./Avatar";
 import MapEmbed from "./MapEmbed";
+import RvxMedia from "./RvxMedia";
 import { KickBadge, VerifiedBadge } from "./ui";
 
-const TABS = ["Map", "Timeline", "Crew"] as const;
+const TABS = ["Map", "Timeline", "Clips & VODs", "Crew"] as const;
 type Tab = (typeof TABS)[number];
 
 function CrewCard({ member }: { member: CrewMember }) {
@@ -126,6 +127,8 @@ export default function RvxHub() {
             </ol>
           </div>
         )}
+
+        {tab === "Clips & VODs" && <RvxMedia />}
 
         {tab === "Crew" && (
           <>

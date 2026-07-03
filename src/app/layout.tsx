@@ -3,7 +3,6 @@ import { Lexend, Oxanium } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import AgeGate from "@/components/AgeGate";
 import { KickProvider } from "@/components/KickProvider";
 import { AuthProvider } from "@/components/AuthProvider";
 
@@ -42,7 +41,6 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="flex min-h-screen flex-col bg-bg text-ink">
-        <AgeGate />
         <AuthProvider>
           <KickProvider>
             <Header />
