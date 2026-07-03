@@ -5,6 +5,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import AgeGate from "@/components/AgeGate";
 import { KickProvider } from "@/components/KickProvider";
+import { AuthProvider } from "@/components/AuthProvider";
 
 const lexend = Lexend({
   variable: "--font-lexend",
@@ -42,11 +43,13 @@ export default function RootLayout({
     >
       <body className="flex min-h-screen flex-col bg-bg text-ink">
         <AgeGate />
-        <KickProvider>
-          <Header />
-          <main className="flex-1 w-full">{children}</main>
-          <Footer />
-        </KickProvider>
+        <AuthProvider>
+          <KickProvider>
+            <Header />
+            <main className="flex-1 w-full">{children}</main>
+            <Footer />
+          </KickProvider>
+        </AuthProvider>
       </body>
     </html>
   );

@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import Logo from "./Logo";
 import { currentKickUser } from "@/lib/kickAuth";
+import { useAuth, displayName } from "./AuthProvider";
 
 const NAV = [
   { href: "/", label: "Home" },
@@ -19,11 +20,14 @@ export default function Header() {
   const pathname = usePathname();
   const router = useRouter();
   const [q, setQ] = useState("");
-  const [user, setUser] = useState<string | null>(null);
+  const { user: siteUser, signOut } = useAuth();
+  const [kickUser, setKickUser] = useState<string | null>(null);
 
   useEffect(() => {
-    setUser(currentKickUser());
+    setKickUser(currentKickUser());
   }, [pathname]);
+
+  const account = displayName(siteUser) || kickUser;
 
   const isActive = (href: string) =>
     href === "/" ? pathname === "/" : pathname.startsWith(href);
@@ -73,17 +77,30 @@ export default function Header() {
           </kbd>
         </form>
 
-        {user ? (
+        {account ? (
           <div className="ml-auto md:ml-0 flex items-center gap-2">
-            <span className="hidden sm:inline text-sm font-semibold text-kick" title="Signed in with Kick">
-              {user}
-            </span>
-            <a
-              href="/api/auth/kick/logout"
-              className="rounded-full border border-line px-3 py-2 text-sm font-medium text-dim transition hover:text-ink"
+            <Link
+              href="/account"
+              className="hidden sm:inline text-sm font-semibold text-accent hover:text-accent-soft"
+              title={siteUser ? "Site account" : "Signed in with Kick"}
             >
-              Sign out
-            </a>
+              {account}
+            </Link>
+            {siteUser ? (
+              <button
+                onClick={() => signOut()}
+                className="rounded-full border border-line px-3 py-2 text-sm font-medium text-dim transition hover:text-ink"
+              >
+                Sign out
+              </button>
+            ) : (
+              <a
+                href="/api/auth/kick/logout"
+                className="rounded-full border border-line px-3 py-2 text-sm font-medium text-dim transition hover:text-ink"
+              >
+                Sign out
+              </a>
+            )}
           </div>
         ) : (
           <Link
