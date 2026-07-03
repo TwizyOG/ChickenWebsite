@@ -46,31 +46,31 @@ const NAMES: Record<string, string> = {
 };
 
 /* Unique Kick slugs (offline roster + currently-live channels).
-   Rechecked against Kick 2026-07-03: five original slugs 404'd (channel gone
-   or renamed). `kodakblack11` was the real Kodak Black under a new handle and
-   is corrected to `kodakblack` (verified, 14k+ followers). The other four had
-   no confident match on Kick — only tiny unrelated accounts — so rather than
-   fabricate an identity they're dropped (a 404 channel can never show a real
-   avatar/name): jacob_live, official_ebz, sainttenn, strokeoff. Re-add here if
-   their current handles are known. */
+   Rechecked against Kick 2026-07-03. A channel returns 404 while its owner is
+   temporarily banned, so those slugs are KEPT in the roster — they show a
+   name-only fallback until the ban lifts, then hydrate normally. Currently
+   ban-404'd but retained: jacob_live, official_ebz, sainttenn, strokeoff.
+   Two handle corrections where the original slug was the wrong account:
+     - `floridabo` (empty squatter, 0 followers) -> `floridaboy` (verified, 13k+)
+     - `kodakblack11` (gone) -> `kodakblack` (verified, 14k+, real Kodak Black) */
 const SLUGS: string[] = [
   "abz", "ac7ionman", "adrianahlee", "akibell", "alchybooned", "aldito1k",
   "alexis", "aloeirl", "ambish", "amouranth", "andy", "asianandy", "attilabak",
   "bakedalaska", "beats", "bennymack", "blackassdave", "blame", "boneclinks",
   "burgerplanet", "captaincontent", "captaingee", "carldo", "catboykamilel",
   "cellfmade", "chickenandy", "chickenandytv", "cristravels", "danihru", "days",
-  "deepak", "eddie", "erectdictator", "feef", "flexiefae", "floridabo",
+  "deepak", "eddie", "erectdictator", "feef", "flexiefae", "floridaboy",
   "gagantv", "garydavid", "gewn", "girit", "hamptonbrando", "hanridge",
-  "hyubsama", "iceposeidon", "iduncle", "iholly", "jackie",
+  "hyubsama", "iceposeidon", "iduncle", "iholly", "jackie", "jacob_live",
   "jandro", "jjstream", "jollyrancherzoo", "kadobell", "kangjoel", "kick_clipz",
   "kikikrazy", "kimmee", "kinocasinogaming", "kodakblack", "krispyw",
   "lifeismizzy", "lordhito", "loulz", "luplupka", "mercoffdaperc", "mhyochi",
   "minettelive", "moises", "mruktikktokofficial", "nanapips", "nanatty", "nedx",
   "nerdballertv", "nickfuentes", "nicklee", "nickwhite", "oceanadventures",
-  "oggeezerlive", "onesonicirl", "oumb", "peggyb", "peteyplastic",
-  "pigeonvizion", "ricogotti", "ryanheinz", "saltygummibear",
+  "official_ebz", "oggeezerlive", "onesonicirl", "oumb", "peggyb", "peteyplastic",
+  "pigeonvizion", "ricogotti", "ryanheinz", "sainttenn", "saltygummibear",
   "sampanday", "samxfrank", "santamaria", "shoovy", "shotime", "sjc_official",
-  "stevewilldoit", "suspendas", "suziesmalls", "sweatyvibin",
+  "stevewilldoit", "strokeoff", "suspendas", "suziesmalls", "sweatyvibin",
   "sweeterin", "taemin1998", "tazo", "thewildlatina", "toneirl", "trausi",
   "tridentchill", "vnthony", "withjenny", "woodbaby", "woozuh", "wvagabond",
   "xenathewitch", "zeroxhero", "zuesirl",
