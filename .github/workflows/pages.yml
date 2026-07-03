@@ -23,7 +23,7 @@ jobs:
         with:
           node-version: 20
           cache: npm
-      - run: npm ci
+      - run: npm install --no-audit --no-fund
       # Route handlers (the Kick OAuth routes) can't be statically exported —
       # they only run on Vercel. Strip them for the GitHub Pages static build.
       - name: Remove server API routes for static export
