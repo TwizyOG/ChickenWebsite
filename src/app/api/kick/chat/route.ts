@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { introspectKickToken } from "@/lib/kickToken";
 
 /* Send a chat message as the signed-in Kick user. Uses the httpOnly kick_token
    (needs the chat:write scope). Resolves the channel's broadcaster_user_id from
@@ -55,12 +56,29 @@ export async function POST(req: NextRequest) {
       headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
       body: JSON.stringify({ broadcaster_user_id: broadcasterId, content, type: "user" }),
     });
-    if (r.status === 403) return NextResponse.json({ error: "missing_scope" }, { status: 403 });
     const j = (await r.json().catch(() => ({}))) as { message?: string; data?: unknown };
-    if (!r.ok) {
-      return NextResponse.json({ error: "send_failed", detail: j?.message }, { status: r.status });
+
+    if (r.ok) return NextResponse.json({ sent: true, data: j?.data });
+
+    // A 403 is ambiguous: it can mean the token was never granted chat:write,
+    // OR the channel rejected the message (followers/subs-only, slow mode, a
+    // ban, etc.). Introspect the token to tell these apart instead of blindly
+    // telling the user to re-auth — re-auth won't fix a channel restriction.
+    if (r.status === 403) {
+      const info = await introspectKickToken(token);
+      if (info.ok && !info.scopes.includes("chat:write")) {
+        return NextResponse.json(
+          { error: "chat_scope_missing", scopes: info.scopes },
+          { status: 403 },
+        );
+      }
+      return NextResponse.json(
+        { error: "forbidden", detail: j?.message || "Channel rejected the message." },
+        { status: 403 },
+      );
     }
-    return NextResponse.json({ sent: true, data: j?.data });
+
+    return NextResponse.json({ error: "send_failed", detail: j?.message }, { status: r.status });
   } catch {
     return NextResponse.json({ error: "network" }, { status: 502 });
   }
