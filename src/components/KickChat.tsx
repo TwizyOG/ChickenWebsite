@@ -114,7 +114,7 @@ export default function KickChat({ slug }: { slug: string }) {
           setSendErr(
             j.detail
               ? `Kick blocked the message: ${j.detail}`
-              : "Kick blocked the message — this channel may be followers/subscribers-only or in slow mode.",
+              : "Kick blocked the message — you may need to follow this channel, or its chat is subscribers-only or in slow mode.",
           );
         else if (j.error === "not_signed_in") setSendErr("Session expired — sign in again.");
         else if (j.error === "channel_not_found") setSendErr("Couldn't resolve this channel on Kick.");
