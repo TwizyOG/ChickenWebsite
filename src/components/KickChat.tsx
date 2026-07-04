@@ -101,13 +101,21 @@ export default function KickChat({ slug }: { slug: string }) {
       if (r.ok) {
         setDraft(""); // sent message echoes back via the websocket
       } else {
-        const j = (await r.json().catch(() => ({}))) as { error?: string; scopes?: string[] };
+        const j = (await r.json().catch(() => ({}))) as {
+          error?: string;
+          scopes?: string[];
+          detail?: string;
+        };
         if (j.error === "chat_scope_missing")
           setSendErr(
             "Your Kick login didn't include chat permission. Revoke this app at kick.com/settings (Connections), then sign in again.",
           );
         else if (j.error === "forbidden")
-          setSendErr("Kick blocked the message — this channel may be followers/subscribers-only or in slow mode.");
+          setSendErr(
+            j.detail
+              ? `Kick blocked the message: ${j.detail}`
+              : "Kick blocked the message — this channel may be followers/subscribers-only or in slow mode.",
+          );
         else if (j.error === "not_signed_in") setSendErr("Session expired — sign in again.");
         else if (j.error === "channel_not_found") setSendErr("Couldn't resolve this channel on Kick.");
         else setSendErr("Couldn't send — try again.");
