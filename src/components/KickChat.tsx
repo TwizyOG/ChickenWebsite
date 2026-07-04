@@ -26,6 +26,36 @@ type Msg = {
 
 const EMOTE = /\[emote:(\d+):([^\]]+)\]/g;
 
+/* A channel's chat rules (from its public chatroom settings). Kick returns a
+   blunt 403 "Forbidden" when the viewer doesn't meet them — most IRL channels
+   run followers-only chat with a minimum follow time — so we read the rules up
+   front and explain exactly what's needed instead of surfacing "Forbidden". */
+type ChatInfo = {
+  followersOnly: boolean;
+  subscribersOnly: boolean;
+  followMinMinutes: number;
+};
+
+/** Human-readable chat restriction, or null when anyone may chat. */
+function describeRestriction(info: ChatInfo | null): string | null {
+  if (!info) return null;
+  if (info.subscribersOnly)
+    return "Subscribers-only chat — subscribe on Kick to send messages here.";
+  if (info.followersOnly) {
+    const m = info.followMinMinutes;
+    const dur =
+      m >= 1440
+        ? `${Math.round(m / 1440)} day(s)`
+        : m >= 60
+          ? `${Math.round(m / 60)} hour(s)`
+          : m > 0
+            ? `${m} min`
+            : "";
+    return `Followers-only chat — follow this channel${dur ? ` (for ${dur})` : ""} to send messages here.`;
+  }
+  return null;
+}
+
 function ChatLine({ m, subBadges }: { m: Msg; subBadges: SubBadge[] }) {
   const parts = useMemo(() => {
     const nodes: React.ReactNode[] = [];
@@ -72,6 +102,7 @@ function ChatLine({ m, subBadges }: { m: Msg; subBadges: SubBadge[] }) {
 export default function KickChat({ slug }: { slug: string }) {
   const [messages, setMessages] = useState<Msg[]>([]);
   const [subBadges, setSubBadges] = useState<SubBadge[]>([]);
+  const [chatInfo, setChatInfo] = useState<ChatInfo | null>(null);
   const [mode, setMode] = useState<"connecting" | "live" | "iframe">("connecting");
   const scrollRef = useRef<HTMLDivElement>(null);
   const atBottom = useRef(true);
@@ -112,9 +143,10 @@ export default function KickChat({ slug }: { slug: string }) {
           );
         else if (j.error === "forbidden")
           setSendErr(
-            j.detail
-              ? `Kick blocked the message: ${j.detail}`
-              : "Kick blocked the message — you may need to follow this channel, or its chat is subscribers-only or in slow mode.",
+            describeRestriction(chatInfo) ??
+              (j.detail
+                ? `Kick blocked the message: ${j.detail}`
+                : "Kick blocked the message — this channel restricts who can chat (followers/subscribers-only or slow mode)."),
           );
         else if (j.error === "not_signed_in") setSendErr("Session expired — sign in again.");
         else if (j.error === "channel_not_found") setSendErr("Couldn't resolve this channel on Kick.");
@@ -141,12 +173,25 @@ export default function KickChat({ slug }: { slug: string }) {
         });
         if (!r.ok) throw new Error(`channel ${r.status}`);
         const j = (await r.json()) as {
-          chatroom?: { id?: number };
+          chatroom?: {
+            id?: number;
+            followers_mode?: boolean;
+            subscribers_mode?: boolean;
+            following_min_duration?: number;
+          };
           subscriber_badges?: { months?: number; badge_image?: { src?: string } }[];
         };
         const chatroomId = j?.chatroom?.id;
         if (!chatroomId) throw new Error("no chatroom");
         if (closed) return;
+
+        // Read the channel's chat rules so a 403 can be explained precisely.
+        const cr = j.chatroom ?? {};
+        setChatInfo({
+          followersOnly: Boolean(cr.followers_mode),
+          subscribersOnly: Boolean(cr.subscribers_mode),
+          followMinMinutes: Number(cr.following_min_duration ?? 0),
+        });
 
         // This channel's own subscriber badge art (months → image), used by
         // ChatBadges to pick the right tier per subscriber, like Kick does.
@@ -239,6 +284,8 @@ export default function KickChat({ slug }: { slug: string }) {
     atBottom.current = el.scrollHeight - el.scrollTop - el.clientHeight < 60;
   };
 
+  const restriction = describeRestriction(chatInfo);
+
   return (
     <section className="flex h-full min-h-0 flex-col rounded-2xl border border-line bg-panel">
       <header className="flex items-center justify-between border-b border-line px-4 py-3">
@@ -280,6 +327,19 @@ export default function KickChat({ slug }: { slug: string }) {
           <div className="border-t border-line p-3">
             {me ? (
               <>
+                {restriction && (
+                  <div className="mb-2 flex items-center gap-2 rounded-lg border border-line bg-elevated/60 px-2.5 py-1.5 text-[11px] text-faint">
+                    <span className="min-w-0 flex-1">⚑ {restriction}</span>
+                    <a
+                      href={`https://kick.com/${encodeURIComponent(slug)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="shrink-0 rounded-full bg-kick px-2.5 py-1 font-bold text-black transition hover:brightness-95"
+                    >
+                      {chatInfo?.subscribersOnly ? "Subscribe on Kick" : "Follow on Kick"}
+                    </a>
+                  </div>
+                )}
                 <form onSubmit={sendMessage} className="flex items-center gap-2">
                   <input
                     value={draft}
