@@ -6,6 +6,7 @@ import Footer from "@/components/Footer";
 import { KickProvider } from "@/components/KickProvider";
 import { AuthProvider } from "@/components/AuthProvider";
 import KickAutoSubscribe from "@/components/KickAutoSubscribe";
+import KickSessionKeeper from "@/components/KickSessionKeeper";
 
 const lexend = Lexend({
   variable: "--font-lexend",
@@ -44,6 +45,7 @@ export default function RootLayout({
       <body className="flex min-h-screen flex-col bg-bg text-ink">
         <AuthProvider>
           <KickProvider>
+            <KickSessionKeeper />
             <KickAutoSubscribe />
             <Header />
             <main className="flex-1 w-full">{children}</main>

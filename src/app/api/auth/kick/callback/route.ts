@@ -9,6 +9,11 @@ import { NextResponse, type NextRequest } from "next/server";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+// How long a signed-in session may live (rolling — extended on each refresh).
+// The short-lived access token is renewed silently within this window, so the
+// user stays signed in until they explicitly log out.
+const SESSION_MAX = 60 * 60 * 24 * 60; // 60 days
+
 export async function GET(req: NextRequest) {
   const url = new URL(req.url);
   const base = url.origin;
@@ -39,7 +44,7 @@ export async function GET(req: NextRequest) {
     code,
   });
 
-  let token: { access_token?: string; expires_in?: number } = {};
+  let token: { access_token?: string; expires_in?: number; refresh_token?: string } = {};
   try {
     const r = await fetch("https://id.kick.com/oauth/token", {
       method: "POST",
@@ -67,20 +72,35 @@ export async function GET(req: NextRequest) {
     /* keep default */
   }
 
-  const maxAge = token.expires_in ?? 3600;
+  const accessMax = token.expires_in ?? 3600;
   const res = NextResponse.redirect(`${base}/`);
   res.cookies.set("kick_token", token.access_token, {
     httpOnly: true,
     secure: true,
     sameSite: "lax",
     path: "/",
-    maxAge,
+    maxAge: accessMax,
   });
+  // Long-lived rotating refresh token → the session is renewed silently, so it
+  // stays alive until the user explicitly logs out (see the refresh route +
+  // KickSessionKeeper). httpOnly: never exposed to page scripts.
+  if (token.refresh_token) {
+    res.cookies.set("kick_refresh", token.refresh_token, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "lax",
+      path: "/",
+      maxAge: SESSION_MAX,
+    });
+  }
+  // Readable display-name cookie the UI reads to know it's signed in — kept for
+  // the whole session window (not just the ~1h access-token life) so the header
+  // and chat don't flip to "signed out" between token refreshes.
   res.cookies.set("kick_user", username, {
     secure: true,
     sameSite: "lax",
     path: "/",
-    maxAge,
+    maxAge: SESSION_MAX,
   });
   res.cookies.delete("kick_pkce");
   res.cookies.delete("kick_state");
