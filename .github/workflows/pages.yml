@@ -40,6 +40,9 @@ jobs:
           # (If the deployment is unavailable the player falls back to Kick's
           # official embed.) Overridable via repo variable HLS_PROXY_ORIGIN.
           NEXT_PUBLIC_HLS_PROXY: ${{ vars.HLS_PROXY_ORIGIN || 'https://chickenwebsite.vercel.app' }}
+          # Forum writes need the Vercel app (OAuth + API routes). The static
+          # mirror renders the forum read-only and deep-links sign-in/submit here.
+          NEXT_PUBLIC_APP_ORIGIN: ${{ vars.APP_ORIGIN || 'https://chickenwebsite.vercel.app' }}
         run: npm run build
       - name: Disable Jekyll
         run: touch out/.nojekyll
