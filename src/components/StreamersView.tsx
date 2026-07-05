@@ -17,7 +17,6 @@ import type { Streamer } from "@/lib/types";
    roster (crew rail + offline directory) hydrating live from Kick. */
 
 const OFFLINE_PREVIEW = 15;
-const PLATFORMS = ["Kick", "Twitch", "YouTube"] as const;
 
 function SectionTitle({ children, count }: { children: React.ReactNode; count?: number }) {
   return (
@@ -43,7 +42,6 @@ export default function StreamersView() {
   const params = useSearchParams();
   const { live, ready } = useKickMap();
   const [sortDesc, setSortDesc] = useState(true);
-  const [platform, setPlatform] = useState<(typeof PLATFORMS)[number]>("Kick");
   const [showAllOffline, setShowAllOffline] = useState(false);
   const [detail, setDetail] = useState<Streamer | null>(null);
 
@@ -54,10 +52,7 @@ export default function StreamersView() {
   const { crew, liveList, offlineList, totalViewers, topViewers } = useMemo(() => {
     const filtered = STREAMERS.filter(match);
     const crewSlugs = new Set(CREW_STREAMERS.map((c) => c.slug));
-    // The whole roster is Kick — the Twitch/YouTube chips exist like the live
-    // site and simply have no channels yet.
-    const platformList = platform === "Kick" ? filtered : [];
-    const liveList = platformList
+    const liveList = filtered
       .filter((s) => live[s.slug]?.live)
       .sort((a, b) => {
         const d = (live[b.slug]?.viewers ?? 0) - (live[a.slug]?.viewers ?? 0);
@@ -69,7 +64,7 @@ export default function StreamersView() {
     const topViewers = liveList.length ? live[liveList[0].slug]?.viewers ?? 0 : 0;
     return { crew, liveList, offlineList, totalViewers, topViewers };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [live, q, platform, sortDesc]);
+  }, [live, q, sortDesc]);
 
   const offlineShown = showAllOffline ? offlineList : offlineList.slice(0, OFFLINE_PREVIEW);
 
@@ -99,31 +94,44 @@ export default function StreamersView() {
         </div>
       </header>
 
-      {/* platform chips */}
-      <div className="mb-4 flex flex-wrap items-center gap-2">
-        {PLATFORMS.map((p) => (
-          <button
-            key={p}
-            onClick={() => setPlatform(p)}
-            className={`rounded-full border px-4 py-1.5 text-sm font-semibold transition ${
-              platform === p
-                ? "border-accent/60 bg-accent/10 text-accent"
-                : "border-line bg-elevated text-dim hover:text-ink"
-            }`}
-          >
-            {p}
-          </button>
-        ))}
+      {/* platform legend + helper bar (1:1 with the live site) */}
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-x-6 gap-y-2 rounded-xl border border-line bg-panel/50 px-4 py-3 text-xs text-neutral-500">
+        <div className="flex items-center gap-4">
+          {(
+            [
+              ["Kick", "#53fc18"],
+              ["Twitch", "#9146ff"],
+              ["YouTube", "#ff0000"],
+            ] as const
+          ).map(([name, color]) => (
+            <span key={name} className="flex items-center gap-1.5">
+              <span className="h-2.5 w-2.5 rounded-full" style={{ background: color }} />
+              {name}
+            </span>
+          ))}
+        </div>
+        <div className="flex flex-wrap items-center gap-x-5 gap-y-1">
+          <span>Click any streamer to view their channel</span>
+          <span className="flex items-center gap-1.5">
+            <svg
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              strokeLinejoin="round"
+              className="h-3 w-3"
+            >
+              <path d="M12 3l2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 18l-5.8 3 1.1-6.5L2.6 9.8l6.5-.9L12 3z" />
+            </svg>
+            Tap the star to add a favorite
+          </span>
+        </div>
       </div>
-
-      <p className="mb-6 text-sm text-faint">
-        Click any streamer to view their channel · Tap the star to add a favorite
-      </p>
 
       {/* live grid */}
       <section className="mb-10">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {!ready && liveList.length === 0 && platform === "Kick"
+          {!ready && liveList.length === 0
             ? Array.from({ length: 8 }).map((_, i) => <CardSkeleton key={i} />)
             : liveList.map((s) => (
                 <div key={s.slug} className="rise">
@@ -131,7 +139,7 @@ export default function StreamersView() {
                 </div>
               ))}
         </div>
-        {(ready || platform !== "Kick") && liveList.length === 0 && (
+        {ready && liveList.length === 0 && (
           <div className="rounded-2xl border border-line bg-panel p-10 text-center">
             <p className="font-display text-lg font-extrabold uppercase">
               No one is live right now.

@@ -22,18 +22,23 @@ function maskEmail(email: string): string {
 function Card({
   title,
   soon,
+  icon,
   children,
 }: {
   title: string;
   soon?: boolean;
+  icon?: React.ReactNode;
   children: React.ReactNode;
 }) {
   return (
-    <section className="rounded-2xl border border-line bg-panel p-6 sm:p-8">
+    <section className="rounded-2xl border border-line bg-panel p-5 sm:p-6">
       <div className="flex items-center gap-2">
-        <h2 className="font-display text-sm font-bold uppercase tracking-widest text-dim">
-          {title}
-        </h2>
+        {icon && (
+          <span className="grid h-7 w-7 place-items-center rounded-lg bg-accent/15 text-accent">
+            {icon}
+          </span>
+        )}
+        <h2 className="text-sm font-extrabold uppercase tracking-wide text-ink">{title}</h2>
         {soon && (
           <span className="rounded-full border border-line px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-faint">
             Coming soon
@@ -42,6 +47,24 @@ function Card({
       </div>
       {children}
     </section>
+  );
+}
+
+function LockIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4">
+      <rect x="4.5" y="11" width="15" height="9" rx="2" />
+      <path d="M8 11V8a4 4 0 0 1 8 0v3" />
+    </svg>
+  );
+}
+
+function MonitorIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="h-4 w-4">
+      <rect x="3" y="4" width="18" height="12" rx="2" />
+      <path d="M8 20h8M12 16v4" />
+    </svg>
   );
 }
 
@@ -286,47 +309,60 @@ export default function AccountSecurity() {
 
   return (
     <div className="space-y-4">
-      {/* Verify email */}
-      <Card title="Verify email">
-        <p className="mt-2 text-sm leading-relaxed text-faint">
-          Verifying your email helps secure your account and unlocks all platform features.
-        </p>
-        {siteUser?.email ? (
-          <div className="mt-4 flex flex-wrap items-center gap-3">
-            <span className="text-sm text-ink">{maskEmail(siteUser.email)}</span>
-            {verified ? (
-              <span className="rounded-full border border-kick/40 bg-kick/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-kick">
-                Verified
-              </span>
+      {/* Verify email — icon tile beside the content, like the live card */}
+      <section className="rounded-2xl border border-line bg-panel p-5 sm:p-6">
+        <div className="flex gap-4">
+          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-accent/15 text-accent">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5">
+              <rect x="3" y="5" width="18" height="14" rx="2" />
+              <path d="M3 7l9 6 9-6" />
+            </svg>
+          </span>
+          <div className="min-w-0 flex-1">
+            <h2 className="text-sm font-extrabold uppercase tracking-wide text-ink">
+              Verify email
+            </h2>
+            <p className="mt-2 text-sm leading-relaxed text-faint">
+              Verifying your email helps secure your account and unlocks all platform features.
+            </p>
+            {siteUser?.email ? (
+              <div className="mt-4 flex flex-wrap items-center gap-3">
+                <span className="text-sm text-ink">{maskEmail(siteUser.email)}</span>
+                {verified ? (
+                  <span className="rounded-full border border-kick/40 bg-kick/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-kick">
+                    Verified
+                  </span>
+                ) : (
+                  <>
+                    <span className="rounded-full border border-mature/40 bg-mature/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-mature">
+                      Unverified
+                    </span>
+                    <button
+                      type="button"
+                      onClick={resend}
+                      disabled={resendBusy}
+                      className="rounded-lg border border-line px-3 py-1.5 text-xs font-semibold text-dim transition hover:border-accent/50 hover:text-ink disabled:opacity-60"
+                    >
+                      {resendBusy ? "Sending…" : "Resend verification"}
+                    </button>
+                  </>
+                )}
+              </div>
             ) : (
-              <>
-                <span className="rounded-full border border-mature/40 bg-mature/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-mature">
-                  Unverified
-                </span>
-                <button
-                  type="button"
-                  onClick={resend}
-                  disabled={resendBusy}
-                  className="rounded-lg border border-line px-3 py-1.5 text-xs font-semibold text-dim transition hover:border-accent/50 hover:text-ink disabled:opacity-60"
-                >
-                  {resendBusy ? "Sending…" : "Resend verification"}
-                </button>
-              </>
+              <p className="mt-4 text-sm text-faint">
+                <Link href="/login" className="text-accent hover:underline">
+                  Sign in
+                </Link>{" "}
+                with your site account to manage email verification.
+              </p>
             )}
+            <MsgBox msg={emailMsg} />
           </div>
-        ) : (
-          <p className="mt-4 text-sm text-faint">
-            <Link href="/login" className="text-accent hover:underline">
-              Sign in
-            </Link>{" "}
-            with your site account to manage email verification.
-          </p>
-        )}
-        <MsgBox msg={emailMsg} />
-      </Card>
+        </div>
+      </section>
 
       {/* Change password */}
-      <Card title="Change password">
+      <Card title="Change password" icon={<LockIcon />}>
         <form onSubmit={changePassword} className="mt-5 space-y-4">
           <PasswordField
             id="pw-current"
@@ -457,7 +493,7 @@ export default function AccountSecurity() {
       </Card>
 
       {/* Login activity */}
-      <Card title="Login activity" soon>
+      <Card title="Login activity" soon icon={<MonitorIcon />}>
         <p className="mt-2 text-sm leading-relaxed text-faint">
           Recent devices that accessed your account will appear here so you can spot anything
           unexpected.

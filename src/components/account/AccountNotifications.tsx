@@ -5,6 +5,7 @@ import {
   getNotices,
   markAllRead,
   onNoticesChange,
+  timeAgo,
   type Notice,
 } from "@/lib/notifications";
 
@@ -12,17 +13,6 @@ import {
    A real feed: go-live alerts for favorites (FavoriteLiveWatcher) and account
    updates (profile saved, password changed, Kick connected…). Opening the page
    marks everything read. */
-
-function timeAgo(at: number): string {
-  const s = Math.max(1, Math.floor((Date.now() - at) / 1000));
-  if (s < 60) return "just now";
-  const m = Math.floor(s / 60);
-  if (m < 60) return `${m}m ago`;
-  const h = Math.floor(m / 60);
-  if (h < 24) return `${h}h ago`;
-  const d = Math.floor(h / 24);
-  return `${d}d ago`;
-}
 
 export default function AccountNotifications() {
   const [notices, setNotices] = useState<Notice[] | null>(null);
@@ -79,7 +69,10 @@ export default function AccountNotifications() {
                 </svg>
               )}
             </span>
-            <p className="min-w-0 flex-1 text-sm text-ink">{n.text}</p>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-semibold text-ink">{n.text}</p>
+              {n.sub && <p className="truncate text-xs text-dim">{n.sub}</p>}
+            </div>
             <span className="shrink-0 text-xs text-faint">{timeAgo(n.at)}</span>
             {!n.read && <span className="h-2 w-2 shrink-0 rounded-full bg-accent" />}
           </li>

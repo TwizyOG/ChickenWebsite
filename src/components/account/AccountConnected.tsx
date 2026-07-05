@@ -6,7 +6,25 @@ import { addNotice } from "@/lib/notifications";
 
 /* Connected Accounts page body — mirrors chickenandy.vercel.app/account/connected.
    Kick is a real connection (existing OAuth flow, also used by stream chat);
-   the other platforms are "coming soon" exactly like the live site. */
+   the other platforms are "coming soon" exactly like the live site. Icon tiles
+   carry each platform's brand color, glyphs extracted from the live page. */
+
+const BRAND: Record<string, string> = {
+  Kick: "#53fc18",
+  Twitch: "#9146ff",
+  YouTube: "#ff0000",
+  Discord: "#5865f2",
+  "Twitter / X": "#e7e9ea",
+  Instagram: "#e1306c",
+};
+
+function KickGlyph() {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5">
+      <path d="M3 3h6v5h2V6h2V4h6v6h-2v2h-2v2h2v2h2v6h-6v-2h-2v-2H9v6H3V3z" />
+    </svg>
+  );
+}
 
 const SOON_PROVIDERS: { name: string; desc: string; icon: React.ReactNode }[] = [
   {
@@ -14,7 +32,7 @@ const SOON_PROVIDERS: { name: string; desc: string; icon: React.ReactNode }[] = 
     desc: "Link your Twitch channel.",
     icon: (
       <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5">
-        <path d="M4 2 2.5 5.5V19H7v3h3l3-3h4l4.5-4.5V2zm15 11.8L16.5 16H12l-2.6 2.6V16H5.5V4H19zM15 7h2v5h-2zm-5 0h2v5h-2z" />
+        <path d="M4.3 3L3 6.2v12.3h4.2V21l3.3-2.5h2.6L19 13V3H4.3zm13.1 9.4l-2.7 2.7h-4.2l-2.3 1.7v-1.7H4.6V4.5h12.8v7.9zM14.7 7.2h-1.5v4.6h1.5V7.2zm-4.3 0H8.9v4.6h1.5V7.2z" />
       </svg>
     ),
   },
@@ -23,7 +41,7 @@ const SOON_PROVIDERS: { name: string; desc: string; icon: React.ReactNode }[] = 
     desc: "Link your YouTube channel.",
     icon: (
       <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5">
-        <path d="M22.5 7.2a2.8 2.8 0 0 0-2-2C18.8 4.8 12 4.8 12 4.8s-6.8 0-8.5.4a2.8 2.8 0 0 0-2 2A29 29 0 0 0 1 12a29 29 0 0 0 .5 4.8 2.8 2.8 0 0 0 2 2c1.7.4 8.5.4 8.5.4s6.8 0 8.5-.4a2.8 2.8 0 0 0 2-2A29 29 0 0 0 23 12a29 29 0 0 0-.5-4.8zM9.8 15.3V8.7L15.7 12z" />
+        <path d="M23 7.5a3 3 0 00-2.1-2.1C19 5 12 5 12 5s-7 0-8.9.4A3 3 0 001 7.5 31 31 0 001 12a31 31 0 00.1 4.5 3 3 0 002.1 2.1C5 19 12 19 12 19s7 0 8.9-.4a3 3 0 002.1-2.1A31 31 0 0023 12a31 31 0 00-.1-4.5zM10 15V9l5 3z" />
       </svg>
     ),
   },
@@ -32,7 +50,7 @@ const SOON_PROVIDERS: { name: string; desc: string; icon: React.ReactNode }[] = 
     desc: "Link your Discord to join the community.",
     icon: (
       <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5">
-        <path d="M19.3 5.3A17 17 0 0 0 15.1 4l-.5 1a15.7 15.7 0 0 0-5.2 0L8.9 4a17 17 0 0 0-4.2 1.3C2 9.2 1.3 13 1.6 16.7A17.2 17.2 0 0 0 6.9 19l1.1-1.8a11 11 0 0 1-1.7-.8l.4-.3a12.2 12.2 0 0 0 10.6 0l.4.3c-.5.3-1.1.6-1.7.8L17.1 19a17.2 17.2 0 0 0 5.3-2.3c.4-4.4-.7-8.1-3.1-11.4M8.7 14.4c-1 0-1.9-1-1.9-2.1s.8-2.1 1.9-2.1 1.9 1 1.9 2.1-.9 2.1-1.9 2.1m6.6 0c-1 0-1.9-1-1.9-2.1s.8-2.1 1.9-2.1 1.9 1 1.9 2.1-.8 2.1-1.9 2.1" />
+        <path d="M19.3 5.3A16 16 0 0015.4 4l-.2.4a12 12 0 013.5 1.8 13.8 13.8 0 00-13.4 0A12 12 0 018.8 4.4L8.6 4a16 16 0 00-3.9 1.3A18.6 18.6 0 001.3 18a16.2 16.2 0 005 2.5l.6-1.2a10.6 10.6 0 01-1.6-.8l.4-.3a9.9 9.9 0 008.6 0l.4.3a10.6 10.6 0 01-1.6.8l.6 1.2a16.2 16.2 0 005-2.5 18.6 18.6 0 00-3.4-12.7zM8.9 14.6c-1 0-1.7-.9-1.7-1.9s.8-1.9 1.7-1.9 1.7.9 1.7 1.9-.8 1.9-1.7 1.9zm6.2 0c-1 0-1.7-.9-1.7-1.9s.8-1.9 1.7-1.9 1.7.9 1.7 1.9-.8 1.9-1.7 1.9z" />
       </svg>
     ),
   },
@@ -41,7 +59,7 @@ const SOON_PROVIDERS: { name: string; desc: string; icon: React.ReactNode }[] = 
     desc: "Link your X profile.",
     icon: (
       <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5">
-        <path d="M17.8 3h3.1l-6.8 7.8L22 21h-6.3l-4.9-6.4L5.2 21H2.1l7.3-8.3L2 3h6.4l4.4 5.9zm-1.1 16.1h1.7L7.5 4.8H5.7z" />
+        <path d="M18.2 2H21l-6.5 7.4L22 22h-6l-4.7-6.1L5.9 22H3l7-8L2 2h6.2l4.2 5.6L18.2 2zm-2.1 18h1.6L7 4H5.3l10.8 16z" />
       </svg>
     ),
   },
@@ -49,10 +67,10 @@ const SOON_PROVIDERS: { name: string; desc: string; icon: React.ReactNode }[] = 
     name: "Instagram",
     desc: "Link your Instagram profile.",
     icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-5 w-5">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5">
         <rect x="3" y="3" width="18" height="18" rx="5" />
         <circle cx="12" cy="12" r="4" />
-        <circle cx="17.2" cy="6.8" r="1.1" fill="currentColor" stroke="none" />
+        <circle cx="17.5" cy="6.5" r="1.1" fill="currentColor" stroke="none" />
       </svg>
     ),
   },
@@ -60,14 +78,14 @@ const SOON_PROVIDERS: { name: string; desc: string; icon: React.ReactNode }[] = 
 
 function Row({
   icon,
-  iconClass,
+  brand,
   name,
   soon,
   desc,
   action,
 }: {
   icon: React.ReactNode;
-  iconClass: string;
+  brand: string;
   name: string;
   soon?: boolean;
   desc: string;
@@ -75,7 +93,10 @@ function Row({
 }) {
   return (
     <div className="flex items-center gap-4 rounded-2xl border border-line bg-panel p-4 sm:p-5">
-      <span className={`grid h-11 w-11 shrink-0 place-items-center rounded-xl ${iconClass}`}>
+      <span
+        className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-elevated"
+        style={{ color: brand }}
+      >
         {icon}
       </span>
       <div className="min-w-0 flex-1">
@@ -124,12 +145,8 @@ export default function AccountConnected() {
       </p>
 
       <Row
-        icon={
-          <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5">
-            <path d="M3 3h5v6l4-6h6l-6 9 6 9h-6l-4-6v6H3z" />
-          </svg>
-        }
-        iconClass="bg-kick/15 text-kick"
+        icon={<KickGlyph />}
+        brand={BRAND.Kick}
         name="Kick"
         desc="Connect your Kick account to verify your identity and chat from the site."
         action={
@@ -168,7 +185,7 @@ export default function AccountConnected() {
         <Row
           key={p.name}
           icon={p.icon}
-          iconClass="bg-elevated text-dim"
+          brand={BRAND[p.name]}
           name={p.name}
           soon
           desc={p.desc}
