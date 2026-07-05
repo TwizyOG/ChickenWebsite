@@ -1,7 +1,7 @@
 # Community Forum — Design Spec
 
 **Date:** 2026-07-05
-**Status:** Approved (design review passed; pending spec sign-off)
+**Status:** Approved (design + spec sign-off 2026-07-05)
 **Feature:** Reddit-style community forum (media-rich, LSF-inspired) living in the `/community` tab, authenticated via the existing Kick OAuth flow.
 
 ## 1. Goals
@@ -18,7 +18,9 @@
 - **Stack:** Next.js 16.2.10 App Router (`src/app`), React 19, Tailwind v4, TypeScript. Per `AGENTS.md`, consult `node_modules/next/dist/docs/` before writing code — this Next version has breaking changes.
 - **Deploys:** Vercel (full app) + GitHub Pages static mirror (`BUILD_TARGET=export`; the workflow deletes `src/app/api` first). Forum API routes are therefore automatically absent from the mirror.
 - **Existing auth:** Kick OAuth 2.1 + PKCE. `src/lib/kickAuth.ts` builds the redirect; `/api/auth/kick/callback` exchanges the code, sets `kick_token` (httpOnly, ~1h), `kick_refresh` (httpOnly, rotating, 60d), `kick_user` (readable display name). `KickSessionKeeper` renews silently. **Gap being fixed here:** the callback fetches `https://api.kick.com/public/v1/users` but discards `user_id` and `profile_picture`; the forum needs both.
-- **Supabase** is already a dependency (`@supabase/supabase-js`, `src/lib/supabase.ts` browser client gated on `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY`).
+- **Supabase** is already a dependency (`@supabase/supabase-js`, `src/lib/supabase.ts` browser client gated on `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY`). **The Supabase project already exists and is connected to Vercel** (user-confirmed 2026-07-05) — no project creation step; the migration runs against it via the dashboard SQL editor (no Supabase CLI installed locally).
+- **Local dev env:** `.env.local` currently holds only a Vercel OIDC token. For local verification of DB-backed features, pull or paste `NEXT_PUBLIC_SUPABASE_*` + the new server vars into `.env.local` (repo is Vercel-linked, so `npx vercel env pull` works once authenticated).
+- **Deployment:** push to `main` auto-deploys both targets (Vercel via GitHub integration; Pages via `.github/workflows/pages.yml`). Final delivery = push to `main`. Live target: `https://chickenwebsite.vercel.app/community` → `NEXT_PUBLIC_APP_ORIGIN=https://chickenwebsite.vercel.app`.
 - **Vercel limit:** serverless request bodies cap at ~4.5MB → uploads must go browser → storage directly.
 - **Supabase free tier:** 50MB per-file upload cap, 1GB total storage. Caps must be env-configurable.
 - **Compliance stance (site-wide):** official embeds only, public keyless client-side Kick API reads (same as `src/lib/kick.ts`).
