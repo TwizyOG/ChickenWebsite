@@ -9,5 +9,6 @@ export async function GET(req: NextRequest) {
   res.cookies.delete("kick_token");
   res.cookies.delete("kick_refresh");
   res.cookies.delete("kick_user");
+  res.cookies.delete("forum_session");
   return res;
 }

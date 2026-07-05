@@ -1,4 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { FORUM_SESSION_COOKIE, FORUM_SESSION_MAX_AGE, signForumSession } from "@/lib/forumSession";
+import { getSupabaseAdmin } from "@/lib/supabaseAdmin";
 
 /* Kick OAuth callback — exchanges the auth code for tokens server-side (the
    client secret never reaches the browser), fetches the user's name, and sets
@@ -58,18 +60,25 @@ export async function GET(req: NextRequest) {
   }
   if (!token.access_token) return NextResponse.redirect(`${base}/login?error=no_token`);
 
-  // best-effort: fetch the signed-in user's display name
+  // best-effort: fetch the signed-in user's identity. The numeric user_id is
+  // the stable anchor the forum profile hangs off (usernames can change).
   let username = "Kick user";
+  let kickId: number | null = null;
+  let avatar: string | null = null;
   try {
     const ur = await fetch("https://api.kick.com/public/v1/users", {
       headers: { Authorization: `Bearer ${token.access_token}` },
     });
     if (ur.ok) {
       const uj = await ur.json();
-      username = uj?.data?.[0]?.name || uj?.data?.[0]?.username || username;
+      const u = uj?.data?.[0] ?? {};
+      username = u.name || u.username || username;
+      const rawId = Number(u.user_id);
+      kickId = Number.isFinite(rawId) && rawId > 0 ? rawId : null;
+      avatar = typeof u.profile_picture === "string" && u.profile_picture ? u.profile_picture : null;
     }
   } catch {
-    /* keep default */
+    /* keep defaults */
   }
 
   const accessMax = token.expires_in ?? 3600;
@@ -102,6 +111,39 @@ export async function GET(req: NextRequest) {
     path: "/",
     maxAge: SESSION_MAX,
   });
+  // Forum identity: signed session cookie + profile upsert (spec:
+  // docs/superpowers/specs/2026-07-05-community-forum-design.md §4.1).
+  const forumSecret = process.env.FORUM_SESSION_SECRET ?? "";
+  if (kickId && forumSecret) {
+    res.cookies.set(FORUM_SESSION_COOKIE, signForumSession({ kickId, username, avatar }, forumSecret), {
+      httpOnly: true,
+      secure: true,
+      sameSite: "lax",
+      path: "/",
+      maxAge: FORUM_SESSION_MAX_AGE,
+    });
+    try {
+      const admin = getSupabaseAdmin();
+      if (admin) {
+        const adminIds = (process.env.FORUM_ADMIN_KICK_IDS ?? "")
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean);
+        const { data: existing } = await admin
+          .from("profiles")
+          .select("role")
+          .eq("kick_id", kickId)
+          .maybeSingle();
+        // allowlist promotes to admin; otherwise keep whatever role the row has
+        const role = adminIds.includes(String(kickId)) ? "admin" : existing?.role ?? "user";
+        await admin
+          .from("profiles")
+          .upsert({ kick_id: kickId, username, avatar_url: avatar, role }, { onConflict: "kick_id" });
+      }
+    } catch {
+      /* profile syncs on a later login — never block sign-in on the forum DB */
+    }
+  }
   res.cookies.delete("kick_pkce");
   res.cookies.delete("kick_state");
   return res;
