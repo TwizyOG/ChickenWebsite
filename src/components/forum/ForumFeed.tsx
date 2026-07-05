@@ -18,6 +18,13 @@ import PostCard from "@/components/forum/PostCard";
 const SORTS: FeedSort[] = ["hot", "new", "top"];
 const SORT_LABEL: Record<FeedSort, string> = { hot: "Hot", new: "New", top: "Top" };
 
+type FeedState = {
+  key: string; // `${sort}|${flair}` — a key mismatch means "stale, show skeletons"
+  posts: FeedPost[] | null;
+  done: boolean;
+  error: string | null;
+};
+
 export default function ForumFeed() {
   const router = useRouter();
   const params = useSearchParams();
@@ -25,11 +32,14 @@ export default function ForumFeed() {
   const sort: FeedSort = rawSort && SORTS.includes(rawSort) ? rawSort : "hot";
   const flairParam = params.get("flair");
   const flair = flairParam ? Number(flairParam) || null : null;
+  const key = `${sort}|${flair ?? ""}`;
 
   const [flairs, setFlairs] = useState<Flair[]>([]);
-  const [posts, setPosts] = useState<FeedPost[] | null>(null); // null = first load
-  const [error, setError] = useState<string | null>(null);
-  const [done, setDone] = useState(false);
+  // Reset-on-filter-change is *derived* from the key (no setState in effects):
+  // state tagged with a stale key renders as if it were the fresh empty state.
+  const [feed, setFeed] = useState<FeedState>({ key, posts: null, done: false, error: null });
+  const shown: FeedState =
+    feed.key === key ? feed : { key, posts: null, done: false, error: null };
   const cursor = useRef<FeedCursor>(null);
   const loading = useRef(false);
   const sentinel = useRef<HTMLDivElement | null>(null);
@@ -45,19 +55,25 @@ export default function ForumFeed() {
     async (reset: boolean) => {
       if (loading.current) return;
       loading.current = true;
-      setError(null);
       try {
         const page = await fetchFeed(sort, flair, reset ? null : cursor.current);
         cursor.current = nextCursor(sort, page);
-        setPosts((prev) => (reset || !prev ? page : [...prev, ...page]));
-        if (page.length < FEED_PAGE) setDone(true);
+        setFeed((prev) => {
+          const base = !reset && prev.key === key && prev.posts ? prev.posts : [];
+          return { key, posts: [...base, ...page], done: page.length < FEED_PAGE, error: null };
+        });
       } catch (e) {
-        setError((e as Error).message);
+        setFeed((prev) => ({
+          key,
+          posts: prev.key === key ? prev.posts : null,
+          done: false,
+          error: (e as Error).message,
+        }));
       } finally {
         loading.current = false;
       }
     },
-    [sort, flair],
+    [sort, flair, key],
   );
 
   useEffect(() => {
@@ -66,14 +82,12 @@ export default function ForumFeed() {
 
   useEffect(() => {
     cursor.current = null;
-    setPosts(null);
-    setDone(false);
     loadMore(true);
   }, [loadMore]);
 
   useEffect(() => {
     const el = sentinel.current;
-    if (!el || done) return;
+    if (!el || shown.done || shown.error) return;
     const io = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting) loadMore(false);
@@ -82,7 +96,7 @@ export default function ForumFeed() {
     );
     io.observe(el);
     return () => io.disconnect();
-  }, [loadMore, done, posts?.length]);
+  }, [loadMore, shown.done, shown.error, shown.posts?.length]);
 
   return (
     <div>
@@ -107,18 +121,18 @@ export default function ForumFeed() {
       </div>
 
       <div className="mt-4 space-y-3">
-        {posts === null &&
-          !error &&
+        {shown.posts === null &&
+          !shown.error &&
           Array.from({ length: 4 }).map((_, i) => (
             <div key={i} className="h-28 animate-pulse rounded-xl border border-line bg-panel" />
           ))}
 
-        {error && (
+        {shown.error && (
           <div className="rounded-xl border border-line bg-panel p-6 text-center">
-            <p className="text-sm text-neutral-400">Couldn&apos;t load the feed: {error}</p>
+            <p className="text-sm text-neutral-400">Couldn&apos;t load the feed: {shown.error}</p>
             <button
               type="button"
-              onClick={() => loadMore(posts === null)}
+              onClick={() => loadMore(shown.posts === null)}
               className="mt-3 rounded-lg bg-accent px-4 py-2 text-sm font-bold text-accent-ink transition hover:bg-accent-soft"
             >
               Try again
@@ -126,15 +140,15 @@ export default function ForumFeed() {
           </div>
         )}
 
-        {posts?.map((p) => <PostCard key={p.id} post={p} />)}
+        {shown.posts?.map((p) => <PostCard key={p.id} post={p} />)}
 
-        {posts !== null && posts.length === 0 && !error && (
+        {shown.posts !== null && shown.posts.length === 0 && !shown.error && (
           <div className="rounded-xl border border-line bg-panel p-10 text-center text-neutral-500">
             No posts {flair != null ? "with this flair " : ""}yet — be the first!
           </div>
         )}
 
-        {done && posts !== null && posts.length > 0 && (
+        {shown.done && shown.posts !== null && shown.posts.length > 0 && (
           <p className="py-4 text-center text-xs text-neutral-600">You&apos;re all caught up.</p>
         )}
         <div ref={sentinel} />
