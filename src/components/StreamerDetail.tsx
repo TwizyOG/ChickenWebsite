@@ -89,7 +89,10 @@ export default function StreamerDetail({
         </div>
 
         <div className="px-6 pb-6">
-          <div className="-mt-10 flex items-end gap-3">
+          {/* `relative` so this row paints above the positioned banner it
+              overlaps — without it the banner background covers the top half
+              of the avatar and name. */}
+          <div className="relative -mt-10 flex items-end gap-3">
             <Avatar slug={slug} name={name} src={live.avatar} size={80} ring />
             <div className="pb-1">
               <div className="flex items-center gap-2">

@@ -31,24 +31,24 @@ const COLS: { title: string; links: { label: string; href: string }[] }[] = [
 
 export default function Footer() {
   return (
-    <footer className="mt-16 border-t border-line bg-panel/60">
+    <footer className="mt-16 border-t border-line bg-bg">
       <div className="grid grid-cols-2 gap-8 px-4 py-12 sm:grid-cols-3 sm:px-6 lg:grid-cols-5 lg:px-12 xl:px-16">
-        <div className="col-span-2 max-w-xs">
+        <div className="col-span-2">
           <Logo />
-          <p className="mt-3 text-sm text-dim">
+          <p className="mt-3 max-w-xs text-sm text-neutral-500">
             The ultimate community hub for streamers and gaming enthusiasts.
           </p>
         </div>
 
         {COLS.map((c) => (
           <div key={c.title}>
-            <h4 className="font-display text-xs font-bold uppercase tracking-widest text-faint">
+            <h4 className="mb-3 text-xs font-bold uppercase tracking-wide text-neutral-300">
               {c.title}
             </h4>
-            <ul className="mt-3 space-y-2">
+            <ul className="space-y-2 text-sm text-neutral-500">
               {c.links.map((l) => (
                 <li key={l.href}>
-                  <Link href={l.href} className="text-sm text-dim transition hover:text-accent">
+                  <Link href={l.href} className="transition hover:text-accent">
                     {l.label}
                   </Link>
                 </li>
@@ -58,14 +58,14 @@ export default function Footer() {
         ))}
 
         <div>
-          <h4 className="font-display text-xs font-bold uppercase tracking-widest text-faint">
+          <h4 className="mb-3 text-xs font-bold uppercase tracking-wide text-neutral-300">
             Contact
           </h4>
-          <ul className="mt-3 space-y-2">
+          <ul className="space-y-2 text-sm text-neutral-500">
             <li>
               <a
                 href="mailto:hello@chickenandy.net"
-                className="text-sm text-dim transition hover:text-accent"
+                className="transition hover:text-accent"
               >
                 hello@chickenandy.net
               </a>
@@ -73,7 +73,7 @@ export default function Footer() {
             <li>
               <a
                 href="mailto:hello@chickenandy.net?subject=Business%20Inquiry"
-                className="text-sm text-dim transition hover:text-accent"
+                className="transition hover:text-accent"
               >
                 Business Inquiries
               </a>
@@ -82,19 +82,17 @@ export default function Footer() {
         </div>
       </div>
 
-      <div className="border-t border-line/60">
-        <div className="flex flex-col items-center gap-1 px-4 py-5 text-center text-xs text-faint sm:px-6">
-          <p>© 2026 ChickenAndy. All rights reserved.</p>
-          <p>
-            Created with love by{" "}
-            <a
-              href="https://digitalheroesco.com/"
-              className="text-dim underline-offset-2 transition hover:text-accent hover:underline"
-            >
-              Digital Heroes
-            </a>
-          </p>
-        </div>
+      <div className="space-y-1 border-t border-line py-5 text-center text-xs">
+        <p className="text-neutral-600">© 2026 ChickenAndy. All rights reserved.</p>
+        <p className="text-neutral-500">
+          Created with love by{" "}
+          <a
+            href="https://digitalheroesco.com/"
+            className="text-neutral-400 underline-offset-2 transition hover:text-accent hover:underline"
+          >
+            Digital Heroes
+          </a>
+        </p>
       </div>
     </footer>
   );
