@@ -1,16 +1,27 @@
 export default function Logo({ className = "" }: { className?: string }) {
   return (
     <span className={`inline-flex items-center gap-2 ${className}`}>
-      <span
-        aria-hidden
-        className="grid place-items-center h-8 w-8 rounded-lg bg-accent text-accent-ink shadow-[0_0_16px_-4px_var(--color-accent)]"
-      >
-        <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor">
-          <path d="M14.5 3.2c1.7 0 3 1.3 3 3 0 .5-.1 1-.3 1.4l1.9.8c.5.2.8.8.5 1.3l-1 1.9c1 1.2 1.6 2.7 1.6 4.4 0 .9-.7 1.6-1.6 1.6H6.2c-1.8 0-3.3-1.5-3.3-3.3 0-2.6 1.7-4.8 4-5.6.2-2.9 2.3-5.2 5-5.7-.1.2-.1.4-.1.6 0 .9.7 1.6 1.6 1.6.2 0 .3 0 .5-.1-.5.9-1.4 1.5-2.4 1.6.9.3 1.6 1 2 1.9.3-.3.5-.7.5-1.2 0-.9-.7-1.6-1.6-1.6z" />
-          <circle cx="14.6" cy="6.1" r="1" fill="var(--color-accent-ink)" />
-        </svg>
-      </span>
-      <span className="font-display text-xl font-extrabold tracking-tight leading-none">
+      {/* Exact mark extracted from chickenandy.vercel.app (gold chick on a rounded tile). */}
+      <svg viewBox="0 0 64 64" className="h-8 w-8" aria-hidden="true">
+        <defs>
+          <linearGradient id="ca-mark-g" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stopColor="#F0D680" />
+            <stop offset="1" stopColor="#E3B23C" />
+          </linearGradient>
+        </defs>
+        <rect width="64" height="64" rx="15" fill="url(#ca-mark-g)" />
+        <g fill="#1A1206">
+          <circle cx="23.5" cy="17" r="4" />
+          <circle cx="30.5" cy="13.5" r="4.6" />
+          <circle cx="37.5" cy="16.5" r="4.1" />
+          <circle cx="30" cy="34" r="15.5" />
+          <path d="M43 29.5 L56 34 L43 39 Z" />
+          <circle cx="43.5" cy="42.5" r="3.6" />
+        </g>
+        <circle cx="34.5" cy="30" r="3.5" fill="#fff" />
+        <circle cx="35.4" cy="30.4" r="1.5" fill="#1A1206" />
+      </svg>
+      <span className="font-display text-lg font-black tracking-tight leading-none">
         <span className="text-ink">CHICKEN</span>
         <span className="text-accent">ANDY</span>
       </span>

@@ -5,7 +5,13 @@ import { usePathname, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import Logo from "./Logo";
 import { currentKickUser } from "@/lib/kickAuth";
+import { getProfile, onProfileChange } from "@/lib/profile";
 import { useAuth, displayName } from "./AuthProvider";
+
+/* Site header matching chickenandy.vercel.app: single row with the logo,
+   inline nav (lg+), search, and either the gold "Sign in" button or the avatar
+   chip linking to /account; below it, the horizontally scrolling mobile nav.
+   (Sign out lives in the account sidebar, like the live site.) */
 
 const NAV = [
   { href: "/", label: "Home" },
@@ -20,14 +26,22 @@ export default function Header() {
   const pathname = usePathname();
   const router = useRouter();
   const [q, setQ] = useState("");
-  const { user: siteUser, signOut } = useAuth();
+  const [mobileSearch, setMobileSearch] = useState(false);
+  const { user: siteUser } = useAuth();
   const [kickUser, setKickUser] = useState<string | null>(null);
+  const [profile, setProfile] = useState({ username: "", location: "", avatar: "" });
 
   useEffect(() => {
     setKickUser(currentKickUser());
+    setProfile(getProfile());
   }, [pathname]);
 
-  const account = displayName(siteUser) || kickUser;
+  // Reflect profile edits made on the account page without a full reload.
+  useEffect(() => onProfileChange(() => setProfile(getProfile())), []);
+
+  // Your chosen account display name wins over the raw Kick provider name.
+  const account = displayName(siteUser) || profile.username || kickUser;
+  const initial = (account?.[0] || "?").toUpperCase();
 
   const isActive = (href: string) =>
     href === "/" ? pathname === "/" : pathname.startsWith(href);
@@ -35,98 +49,158 @@ export default function Header() {
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
     router.push(q.trim() ? `/streamers?q=${encodeURIComponent(q.trim())}` : "/streamers");
+    setMobileSearch(false);
   };
 
   return (
     <header className="sticky top-0 z-40 border-b border-line bg-bg/85 backdrop-blur-md">
-      {/* decorative gold banner strip */}
-      <div className="relative h-9 overflow-hidden border-b border-line/60">
-        <div className="absolute inset-0 bg-[radial-gradient(60%_120%_at_50%_0%,rgba(227,178,60,0.25),transparent)]" />
-        <div className="absolute inset-0 opacity-[0.12] bg-[repeating-linear-gradient(90deg,#e3b23c_0_2px,transparent_2px_10px)]" />
-        <div className="relative h-full grid place-items-center">
-          <span className="font-display text-[11px] font-bold tracking-[0.35em] text-accent/90">
-            ● LIVE STREAMER DIRECTORY ●
-          </span>
-        </div>
-      </div>
-
-      <div className="mx-auto flex h-16 max-w-7xl items-center gap-4 px-4 sm:px-6">
+      <div className="flex h-16 items-center gap-4 px-4 sm:px-6 lg:px-12 xl:px-16">
         <Link href="/" aria-label="ChickenAndy home" className="shrink-0">
           <Logo />
         </Link>
 
-        <form onSubmit={submit} className="relative ml-auto hidden md:block w-64 lg:w-80">
+        {/* desktop nav */}
+        <nav className="ml-4 hidden items-center gap-6 text-sm font-semibold lg:flex">
+          {NAV.map((n) => {
+            const active = isActive(n.href);
+            return (
+              <Link
+                key={n.href}
+                href={n.href}
+                className={`relative py-1 transition ${
+                  active ? "text-accent" : "text-dim hover:text-ink"
+                }`}
+              >
+                {n.label}
+                {active && (
+                  <span className="absolute -bottom-1 left-0 right-0 h-0.5 rounded-full bg-accent" />
+                )}
+              </Link>
+            );
+          })}
+        </nav>
+
+        <div className="flex-1" />
+
+        {/* desktop search */}
+        <form onSubmit={submit} className="hidden w-60 sm:block">
+          <div className="flex items-center gap-2.5 rounded-xl border border-line bg-elevated px-3 transition hover:border-faint/60">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="h-4 w-4 shrink-0 text-faint"
+            >
+              <circle cx="11" cy="11" r="7" />
+              <path d="M21 21l-4.2-4.2" />
+            </svg>
+            <input
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="Search streamers…"
+              aria-label="Search streamers"
+              className="w-full bg-transparent py-2.5 text-sm text-ink outline-none placeholder:text-faint"
+            />
+            <kbd className="hidden shrink-0 rounded border border-line px-1.5 text-[11px] text-faint sm:block">
+              ⌘K
+            </kbd>
+          </div>
+        </form>
+
+        {/* mobile search toggle */}
+        <button
+          type="button"
+          aria-label="Search"
+          aria-expanded={mobileSearch}
+          onClick={() => setMobileSearch((v) => !v)}
+          className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-line text-dim transition hover:border-accent/40 hover:text-accent sm:hidden"
+        >
           <svg
-            className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-faint"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
-            strokeWidth="2"
+            strokeWidth="2.2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="h-[18px] w-[18px]"
           >
             <circle cx="11" cy="11" r="7" />
-            <path d="m21 21-4.3-4.3" />
+            <path d="M21 21l-4.2-4.2" />
           </svg>
-          <input
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            placeholder="Search streamers..."
-            className="w-full rounded-full border border-line bg-elevated py-2 pl-9 pr-12 text-sm text-ink placeholder:text-faint outline-none transition focus:border-accent/60 focus:ring-2 focus:ring-accent/20"
-          />
-          <kbd className="absolute right-3 top-1/2 -translate-y-1/2 rounded border border-line bg-panel px-1.5 py-0.5 text-[10px] text-faint">
-            ⌘K
-          </kbd>
-        </form>
+        </button>
 
         {account ? (
-          <div className="ml-auto md:ml-0 flex items-center gap-2">
-            <Link
-              href="/account"
-              className="hidden sm:inline text-sm font-semibold text-accent hover:text-accent-soft"
-              title={siteUser ? "Site account" : "Signed in with Kick"}
-            >
-              {account}
-            </Link>
-            {siteUser ? (
-              <button
-                onClick={() => signOut()}
-                className="rounded-full border border-line px-3 py-2 text-sm font-medium text-dim transition hover:text-ink"
-              >
-                Sign out
-              </button>
+          <Link href="/account" aria-label="My account" title={account} className="shrink-0">
+            {profile.avatar ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={profile.avatar}
+                alt=""
+                className="h-9 w-9 rounded-full border border-accent/50 object-cover transition hover:brightness-110"
+              />
             ) : (
-              <a
-                href="/api/auth/kick/logout"
-                className="rounded-full border border-line px-3 py-2 text-sm font-medium text-dim transition hover:text-ink"
-              >
-                Sign out
-              </a>
+              <span className="grid h-9 w-9 place-items-center rounded-full bg-accent font-display text-sm font-black text-accent-ink transition hover:brightness-110">
+                {initial}
+              </span>
             )}
-          </div>
+          </Link>
         ) : (
           <Link
             href="/login"
-            className="ml-auto md:ml-0 rounded-full bg-accent px-4 py-2 text-sm font-semibold text-accent-ink transition hover:bg-accent-soft"
+            className="shrink-0 rounded-lg bg-accent px-4 py-2 text-sm font-bold text-accent-ink transition hover:bg-accent-soft active:scale-95"
           >
             Sign in
           </Link>
         )}
       </div>
 
-      <nav className="mx-auto flex max-w-7xl items-center gap-1 px-4 sm:px-6">
+      {/* mobile search row */}
+      {mobileSearch && (
+        <form onSubmit={submit} className="border-t border-line px-4 py-2 sm:hidden">
+          <div className="flex items-center gap-2.5 rounded-xl border border-line bg-elevated px-3">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="h-4 w-4 shrink-0 text-faint"
+            >
+              <circle cx="11" cy="11" r="7" />
+              <path d="M21 21l-4.2-4.2" />
+            </svg>
+            <input
+              autoFocus
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="Search streamers…"
+              aria-label="Search streamers"
+              className="w-full bg-transparent py-2.5 text-sm text-ink outline-none placeholder:text-faint"
+            />
+          </div>
+        </form>
+      )}
+
+      {/* mobile nav */}
+      <nav className="flex items-center gap-1 overflow-x-auto border-t border-line px-2 lg:hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {NAV.map((n) => {
           const active = isActive(n.href);
           return (
             <Link
               key={n.href}
               href={n.href}
-              className={`relative px-3 py-3 text-sm font-medium transition ${
-                active ? "text-accent" : "text-dim hover:text-ink"
+              aria-current={active ? "page" : undefined}
+              className={`shrink-0 whitespace-nowrap border-b-2 px-3 py-2.5 text-sm font-bold transition ${
+                active
+                  ? "border-accent text-accent"
+                  : "border-transparent text-faint hover:text-ink"
               }`}
             >
               {n.label}
-              {active && (
-                <span className="absolute inset-x-3 -bottom-px h-0.5 rounded-full bg-accent" />
-              )}
             </Link>
           );
         })}

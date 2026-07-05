@@ -3,10 +3,12 @@ import { Lexend, Oxanium } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import SiteChrome from "@/components/SiteChrome";
 import { KickProvider } from "@/components/KickProvider";
 import { AuthProvider } from "@/components/AuthProvider";
 import KickAutoSubscribe from "@/components/KickAutoSubscribe";
 import KickSessionKeeper from "@/components/KickSessionKeeper";
+import FavoriteLiveWatcher from "@/components/FavoriteLiveWatcher";
 
 const lexend = Lexend({
   variable: "--font-lexend",
@@ -47,9 +49,14 @@ export default function RootLayout({
           <KickProvider>
             <KickSessionKeeper />
             <KickAutoSubscribe />
-            <Header />
+            <FavoriteLiveWatcher />
+            <SiteChrome>
+              <Header />
+            </SiteChrome>
             <main className="flex-1 w-full">{children}</main>
-            <Footer />
+            <SiteChrome>
+              <Footer />
+            </SiteChrome>
           </KickProvider>
         </AuthProvider>
       </body>

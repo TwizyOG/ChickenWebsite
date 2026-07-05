@@ -80,13 +80,12 @@ export default function HomeView() {
         </div>
 
         {!showSkeletons && liveList.length === 0 && (
-          <p className="mt-8 text-center text-sm text-faint">
-            No streamers are live right now — browse the full{" "}
-            <a href="/streamers" className="text-accent hover:underline">
-              directory
-            </a>
-            .
-          </p>
+          <div className="mt-8 rounded-2xl border border-line bg-panel p-10 text-center">
+            <p className="font-display text-lg font-extrabold uppercase">No one is live right now</p>
+            <p className="mt-1 text-sm text-faint">
+              Check back soon — streams appear here the moment a creator goes live.
+            </p>
+          </div>
         )}
 
         {visible < liveList.length && (

@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 /* =============================================================================
-   ChickenAndy — Live Streamer Directory (clone)
-   Design tokens extracted from chickenandy.vercel.app:
+   ChickenAndy — Live Streamer Directory
+   Design tokens matching chickenandy.vercel.app:
    near-black surface, gold accent, Lexend body / Oxanium display.
    ========================================================================== */
 @theme {

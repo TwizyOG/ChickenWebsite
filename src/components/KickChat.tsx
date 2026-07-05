@@ -360,7 +360,7 @@ export default function KickChat({ slug }: { slug: string }) {
               </>
             ) : (
               <a
-                href="/login"
+                href="/account/connected"
                 className="block rounded-lg border border-accent/40 py-2.5 text-center text-sm font-semibold uppercase tracking-wide text-accent transition hover:bg-accent/10"
               >
                 Sign in to chat
