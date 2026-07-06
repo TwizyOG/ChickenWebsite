@@ -1,4 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { FORUM_SESSION_COOKIE_OPTS, establishForumSession, getSession } from "@/lib/forumApi";
+import { FORUM_SESSION_COOKIE } from "@/lib/forumSession";
 
 /* Silent session renewal. Kick access tokens are short-lived (~1h) and rotate;
    this swaps the long-lived refresh cookie for a fresh access token (and a new
@@ -82,6 +84,14 @@ export async function POST(req: NextRequest) {
       path: "/",
       maxAge: SESSION_MAX,
     });
+  }
+  // Forum: sessions from before the forum existed have no forum_session cookie.
+  // The silent renewal runs on every page load, so heal it here too.
+  if (!getSession(req)) {
+    const healed = await establishForumSession(token.access_token);
+    if (healed) {
+      res.cookies.set(FORUM_SESSION_COOKIE, healed.cookieValue, FORUM_SESSION_COOKIE_OPTS);
+    }
   }
   return res;
 }

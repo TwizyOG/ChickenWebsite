@@ -178,7 +178,7 @@ create or replace function public.get_feed(
   p_cursor jsonb default null,
   p_limit  int default 25
 ) returns setof public.posts_feed
-language sql stable
+language sql stable set search_path = public
 as $$
   select *
   from public.posts_feed

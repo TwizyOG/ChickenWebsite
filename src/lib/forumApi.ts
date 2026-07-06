@@ -1,5 +1,11 @@
 import { type NextRequest } from "next/server";
-import { FORUM_SESSION_COOKIE, type ForumSession, verifyForumSession } from "@/lib/forumSession";
+import {
+  FORUM_SESSION_COOKIE,
+  FORUM_SESSION_MAX_AGE,
+  type ForumSession,
+  signForumSession,
+  verifyForumSession,
+} from "@/lib/forumSession";
 import { getSupabaseAdmin } from "@/lib/supabaseAdmin";
 
 /* Shared plumbing for /api/forum/* write routes. The session cookie only
@@ -39,7 +45,11 @@ export function getSession(req: NextRequest): ForumSession | null {
 export async function requireCaller(req: NextRequest): Promise<Caller | Response> {
   const session = getSession(req);
   if (!session) return jsonError(401, "signed_out", "Sign in with Kick to do that.");
+  return loadCaller(session);
+}
 
+/** DB half of requireCaller — usable with a freshly healed session too. */
+export async function loadCaller(session: ForumSession): Promise<Caller | Response> {
   const admin = getSupabaseAdmin();
   if (!admin) return jsonError(500, "not_configured", "Forum backend is not configured.");
 
@@ -73,4 +83,66 @@ export async function requireCaller(req: NextRequest): Promise<Caller | Response
 export function bannedResponse(ban: ActiveBan): Response | null {
   if (!ban) return null;
   return jsonError(403, "banned", "You are banned from the community forum.", { ban });
+}
+
+export const FORUM_SESSION_COOKIE_OPTS = {
+  httpOnly: true,
+  secure: true,
+  sameSite: "lax",
+  path: "/",
+  maxAge: FORUM_SESSION_MAX_AGE,
+} as const;
+
+/** Self-heal: mint a forum_session (+ ensure the profile row) from a live Kick
+    access token. Covers sessions created before the forum env vars existed —
+    the user stays signed in with Kick but has no forum cookie yet. */
+export async function establishForumSession(
+  accessToken: string,
+): Promise<{ cookieValue: string; session: ForumSession } | null> {
+  const secret = process.env.FORUM_SESSION_SECRET;
+  if (!secret || !accessToken) return null;
+  try {
+    const r = await fetch("https://api.kick.com/public/v1/users", {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    if (!r.ok) return null;
+    const j = await r.json();
+    const u = j?.data?.[0] ?? {};
+    const rawId = Number(u.user_id);
+    const kickId = Number.isFinite(rawId) && rawId > 0 ? rawId : null;
+    if (!kickId) return null;
+    const username: string = u.name || u.username || "Kick user";
+    const avatar: string | null =
+      typeof u.profile_picture === "string" && u.profile_picture ? u.profile_picture : null;
+
+    const admin = getSupabaseAdmin();
+    if (admin) {
+      try {
+        const adminIds = (process.env.FORUM_ADMIN_KICK_IDS ?? "")
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean);
+        const { data: existing } = await admin
+          .from("profiles")
+          .select("role")
+          .eq("kick_id", kickId)
+          .maybeSingle();
+        const role = adminIds.includes(String(kickId)) ? "admin" : existing?.role ?? "user";
+        await admin
+          .from("profiles")
+          .upsert({ kick_id: kickId, username, avatar_url: avatar, role }, { onConflict: "kick_id" });
+      } catch {
+        /* profile can sync on a later request */
+      }
+    }
+
+    const now = Date.now();
+    const iat = Math.floor(now / 1000);
+    return {
+      cookieValue: signForumSession({ kickId, username, avatar }, secret, now),
+      session: { kickId, username, avatar, iat, exp: iat + FORUM_SESSION_MAX_AGE },
+    };
+  } catch {
+    return null;
+  }
 }
