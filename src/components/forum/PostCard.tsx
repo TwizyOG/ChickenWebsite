@@ -4,6 +4,7 @@ import Link from "next/link";
 import { type FeedPost, type VoteValue, timeAgo } from "@/lib/forum";
 import VoteRail, { type VoteState } from "@/components/forum/VoteRail";
 import MediaViewer from "@/components/forum/MediaViewer";
+import UserHovercard from "@/components/forum/UserHovercard";
 
 export function FlairChip({ name, color }: { name: string; color: string }) {
   return (
@@ -47,7 +48,9 @@ export default function PostCard({
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-2 text-xs text-neutral-500">
           <FlairChip name={post.flair_name} color={post.flair_color} />
-          <span className="font-semibold text-neutral-300">u/{post.author_username}</span>
+          <UserHovercard username={post.author_username} kickId={post.author_kick_id}>
+            <span className="font-semibold text-neutral-300">u/{post.author_username}</span>
+          </UserHovercard>
           <span>·</span>
           <span>{timeAgo(post.created_at)} ago</span>
           {post.edited_at && <span className="italic">(edited)</span>}

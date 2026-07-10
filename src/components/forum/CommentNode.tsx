@@ -10,6 +10,7 @@ import {
 } from "@/lib/forum";
 import VoteRail, { type VoteState } from "@/components/forum/VoteRail";
 import CommentComposer from "@/components/forum/CommentComposer";
+import UserHovercard from "@/components/forum/UserHovercard";
 
 export type ThreadHandlers = {
   postId: string;
@@ -90,9 +91,13 @@ export default function CommentNode({ node, h }: { node: CommentNodeData; h: Thr
         </button>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-1.5 text-xs text-neutral-500">
-            <span className="font-semibold text-neutral-300">
-              {c.removed ? "[removed]" : `u/${c.author_username}`}
-            </span>
+            {c.removed ? (
+              <span className="font-semibold text-neutral-300">[removed]</span>
+            ) : (
+              <UserHovercard username={c.author_username} kickId={c.author_kick_id}>
+                <span className="font-semibold text-neutral-300">u/{c.author_username}</span>
+              </UserHovercard>
+            )}
             <RoleBadge role={c.author_role} />
             <span>·</span>
             <span>{timeAgo(c.created_at)} ago</span>
