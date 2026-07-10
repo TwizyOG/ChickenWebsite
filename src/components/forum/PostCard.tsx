@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { type FeedPost, timeAgo } from "@/lib/forum";
+import { type FeedPost, type VoteValue, timeAgo } from "@/lib/forum";
+import VoteRail, { type VoteState } from "@/components/forum/VoteRail";
 
 export function FlairChip({ name, color }: { name: string; color: string }) {
   return (
@@ -15,8 +16,18 @@ export function FlairChip({ name, color }: { name: string; color: string }) {
 }
 
 /** One feed/detail card. `full` = detail page (no clamp, title not a link).
-    The static score rail becomes the interactive VoteRail in plan 02. */
-export default function PostCard({ post, full = false }: { post: FeedPost; full?: boolean }) {
+    Parents own vote state: pass score inside `post`, plus myVote/onVote. */
+export default function PostCard({
+  post,
+  full = false,
+  myVote = 0,
+  onVote,
+}: {
+  post: FeedPost;
+  full?: boolean;
+  myVote?: VoteValue;
+  onVote?: (next: VoteState) => void;
+}) {
   const href = `/community/post?id=${post.id}`;
   const title = (
     <h2 className={`font-bold leading-snug text-neutral-100 ${full ? "text-xl" : "text-base"}`}>
@@ -25,15 +36,13 @@ export default function PostCard({ post, full = false }: { post: FeedPost; full?
   );
   return (
     <article className="flex gap-3 rounded-xl border border-line bg-panel p-3 transition-colors hover:border-neutral-600">
-      <div className="flex w-10 shrink-0 flex-col items-center gap-1 pt-1 text-neutral-400">
-        <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2.5">
-          <path d="M12 5l7 8h-4v6h-6v-6H5z" strokeLinejoin="round" />
-        </svg>
-        <span className="text-sm font-bold text-neutral-200">{post.score}</span>
-        <svg viewBox="0 0 24 24" className="h-4 w-4 rotate-180" fill="none" stroke="currentColor" strokeWidth="2.5">
-          <path d="M12 5l7 8h-4v6h-6v-6H5z" strokeLinejoin="round" />
-        </svg>
-      </div>
+      <VoteRail
+        type="post"
+        id={post.id}
+        score={post.score}
+        myVote={myVote}
+        onChange={(n) => onVote?.(n)}
+      />
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-2 text-xs text-neutral-500">
           <FlairChip name={post.flair_name} color={post.flair_color} />

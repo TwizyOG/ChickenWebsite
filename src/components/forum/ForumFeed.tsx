@@ -6,12 +6,16 @@ import {
   FEED_PAGE,
   fetchFeed,
   fetchFlairs,
+  fetchMyVotes,
   nextCursor,
   type FeedCursor,
   type FeedPost,
   type FeedSort,
   type Flair,
+  type VoteValue,
 } from "@/lib/forum";
+import { getMe } from "@/components/forum/useMe";
+import { type VoteState } from "@/components/forum/VoteRail";
 import FlairBar from "@/components/forum/FlairBar";
 import PostCard from "@/components/forum/PostCard";
 
@@ -38,6 +42,7 @@ export default function ForumFeed() {
   // Reset-on-filter-change is *derived* from the key (no setState in effects):
   // state tagged with a stale key renders as if it were the fresh empty state.
   const [feed, setFeed] = useState<FeedState>({ key, posts: null, done: false, error: null });
+  const [voteState, setVoteState] = useState<Record<string, VoteState>>({});
   const shown: FeedState =
     feed.key === key ? feed : { key, posts: null, done: false, error: null };
   const cursor = useRef<FeedCursor>(null);
@@ -62,6 +67,20 @@ export default function ForumFeed() {
           const base = !reset && prev.key === key && prev.posts ? prev.posts : [];
           return { key, posts: [...base, ...page], done: page.length < FEED_PAGE, error: null };
         });
+        // hydrate the caller's votes for this page (no-op signed out / on the mirror)
+        const meRes = await getMe();
+        if (!("signedOut" in meRes) && page.length) {
+          const mine = await fetchMyVotes("post", page.map((p) => p.id));
+          setVoteState((prev) => {
+            const next = { ...prev };
+            for (const p of page) {
+              if (!next[p.id]) {
+                next[p.id] = { score: p.score, myVote: (mine[p.id] ?? 0) as VoteValue };
+              }
+            }
+            return next;
+          });
+        }
       } catch (e) {
         setFeed((prev) => ({
           key,
@@ -140,7 +159,17 @@ export default function ForumFeed() {
           </div>
         )}
 
-        {shown.posts?.map((p) => <PostCard key={p.id} post={p} />)}
+        {shown.posts?.map((p) => {
+          const vs = voteState[p.id];
+          return (
+            <PostCard
+              key={p.id}
+              post={vs ? { ...p, score: vs.score } : p}
+              myVote={vs?.myVote ?? 0}
+              onVote={(next) => setVoteState((prev) => ({ ...prev, [p.id]: next }))}
+            />
+          );
+        })}
 
         {shown.posts !== null && shown.posts.length === 0 && !shown.error && (
           <div className="rounded-xl border border-line bg-panel p-10 text-center text-neutral-500">
