@@ -34,6 +34,14 @@ Also add `SUPABASE_SERVICE_ROLE_KEY="sb_secret_…"` and `FORUM_ADMIN_KICK_IDS="
 `.env.local` so local dev can write to the DB too. After adding vars, redeploy (or just push —
 every push redeploys).
 
+```bash
+# d) GIF search in comments (optional — the picker says "not configured" until set).
+#    Free key: console.cloud.google.com → enable "Tenor API" → Credentials → API key.
+npx vercel env add TENOR_API_KEY production
+```
+
+Add `TENOR_API_KEY="…"` to `.env.local` too, then redeploy (any push).
+
 ## 2. Database — run the migration
 
 Supabase dashboard → SQL Editor → New query → paste the whole of
