@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { appOrigin, createComment, type ThreadComment } from "@/lib/forum";
+import { appOrigin, createComment, type GifResult, type ThreadComment } from "@/lib/forum";
 import { kickLoginConfigured, startKickLogin } from "@/lib/kickAuth";
 import { useMe } from "@/components/forum/useMe";
+import GifPicker from "@/components/forum/GifPicker";
 
 const MAX_BODY = 5_000;
 
@@ -22,6 +23,8 @@ export default function CommentComposer({
 }) {
   const me = useMe();
   const [body, setBody] = useState("");
+  const [gif, setGif] = useState<GifResult | null>(null);
+  const [showPicker, setShowPicker] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -63,12 +66,14 @@ export default function CommentComposer({
 
   async function submit() {
     const text = body.trim();
-    if (!text || busy) return;
+    if ((!text && !gif) || busy) return;
     setBusy(true);
     setError(null);
     try {
-      const row = await createComment(postId, parentId, text);
+      const row = await createComment(postId, parentId, text, gif?.url ?? null);
       setBody("");
+      setGif(null);
+      setShowPicker(false);
       onDone(row);
     } catch (e) {
       setError((e as Error).message);
@@ -88,8 +93,29 @@ export default function CommentComposer({
         placeholder={parentId ? "Reply…" : "What are your thoughts?"}
         className="w-full resize-y rounded-lg border border-line bg-transparent px-3 py-2 text-sm text-neutral-100 outline-none transition-colors placeholder:text-neutral-600 focus:border-accent"
       />
+      {gif && (
+        <div className="relative mt-1.5 inline-block">
+          <img src={gif.preview} alt={gif.alt} className="h-16 rounded-lg" />
+          <button
+            type="button"
+            aria-label="Remove GIF"
+            onClick={() => setGif(null)}
+            className="absolute -right-1.5 -top-1.5 grid h-5 w-5 place-items-center rounded-full bg-black/80 text-[10px] font-bold text-white"
+          >
+            ✕
+          </button>
+        </div>
+      )}
       {error && <p className="mt-1 text-sm text-mature">{error}</p>}
-      <div className="mt-1.5 flex items-center justify-end gap-3">
+      <div className="mt-1.5 flex items-center gap-3">
+        <button
+          type="button"
+          onClick={() => setShowPicker(!showPicker)}
+          className="rounded border border-line px-2 py-0.5 text-[10px] font-black tracking-wide text-neutral-400 transition-colors hover:border-neutral-500 hover:text-neutral-200"
+        >
+          GIF
+        </button>
+        <span className="flex-1" />
         {onCancel && (
           <button
             type="button"
@@ -101,13 +127,22 @@ export default function CommentComposer({
         )}
         <button
           type="button"
-          disabled={!body.trim() || busy}
+          disabled={(!body.trim() && !gif) || busy}
           onClick={submit}
           className="rounded-lg bg-accent px-3.5 py-1.5 text-xs font-bold text-accent-ink transition hover:bg-accent-soft disabled:cursor-not-allowed disabled:opacity-40"
         >
           {busy ? "Commenting…" : "Comment"}
         </button>
       </div>
+      {showPicker && (
+        <GifPicker
+          onPick={(g) => {
+            setGif(g);
+            setShowPicker(false);
+          }}
+          onClose={() => setShowPicker(false)}
+        />
+      )}
     </div>
   );
 }

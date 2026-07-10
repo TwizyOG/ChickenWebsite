@@ -132,7 +132,14 @@ export default function CommentNode({ node, h }: { node: CommentNodeData; h: Thr
               ) : c.removed ? (
                 <p className="mt-1 text-sm italic text-neutral-600">[removed]</p>
               ) : (
-                <p className="mt-1 whitespace-pre-wrap text-sm text-neutral-200">{c.body}</p>
+                <>
+                  {c.body && (
+                    <p className="mt-1 whitespace-pre-wrap text-sm text-neutral-200">{c.body}</p>
+                  )}
+                  {c.gif_url && (
+                    <img src={c.gif_url} alt="GIF" loading="lazy" className="mt-1.5 max-h-64 rounded-lg" />
+                  )}
+                </>
               )}
 
               {!c.removed && !editing && (

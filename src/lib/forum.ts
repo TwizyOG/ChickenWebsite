@@ -232,11 +232,28 @@ export async function createComment(
   postId: string,
   parentId: string | null,
   body: string,
+  gifUrl: string | null = null,
 ): Promise<ThreadComment> {
   return forumFetch("/api/forum/comments", {
     method: "POST",
-    body: JSON.stringify({ post_id: postId, parent_id: parentId, body }),
+    body: JSON.stringify({ post_id: postId, parent_id: parentId, body, gif_url: gifUrl }),
   });
+}
+
+export type GifResult = {
+  id: string;
+  preview: string;
+  url: string;
+  width: number;
+  height: number;
+  alt: string;
+};
+
+export async function searchGifs(q: string): Promise<GifResult[]> {
+  const j = await forumFetch<{ results: GifResult[] }>(
+    `/api/forum/gif-search?q=${encodeURIComponent(q)}`,
+  );
+  return j.results;
 }
 
 export async function updateComment(id: string, body: string): Promise<ThreadComment> {
