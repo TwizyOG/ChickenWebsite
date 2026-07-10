@@ -42,10 +42,12 @@ export default function VideoPlayer({
   const [buffered, setBuffered] = useState(0);
   const [volume, setVolume] = useState(1);
 
-  // restore persisted volume once
+  // restore persisted volume once (deferred — no sync setState in the effect body)
   useEffect(() => {
     const v = Number(localStorage.getItem(VOL_KEY));
-    if (Number.isFinite(v) && v > 0 && v <= 1) setVolume(v);
+    if (Number.isFinite(v) && v > 0 && v <= 1) {
+      queueMicrotask(() => setVolume(v));
+    }
   }, []);
   useEffect(() => {
     const el = videoRef.current;
