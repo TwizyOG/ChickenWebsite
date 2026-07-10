@@ -11,30 +11,32 @@ export default function GifPicker({
   onClose: () => void;
 }) {
   const [q, setQ] = useState("");
-  const [gifs, setGifs] = useState<GifResult[] | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  // Tagged with the query it answers — a stale/blank query derives to "no results yet".
+  const [result, setResult] = useState<{ q: string; gifs: GifResult[] | null; error: string | null }>(
+    { q: "", gifs: null, error: null },
+  );
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const query = q.trim();
   useEffect(() => {
-    if (!q.trim()) {
-      setGifs(null);
-      setError(null);
-      return;
-    }
+    if (!query) return;
     if (timer.current) clearTimeout(timer.current);
     timer.current = setTimeout(async () => {
       try {
-        setError(null);
-        setGifs(await searchGifs(q.trim()));
+        const gifs = await searchGifs(query);
+        setResult({ q: query, gifs, error: null });
       } catch (e) {
-        setGifs(null);
-        setError((e as Error).message);
+        setResult({ q: query, gifs: null, error: (e as Error).message });
       }
     }, 350);
     return () => {
       if (timer.current) clearTimeout(timer.current);
     };
-  }, [q]);
+  }, [query]);
+
+  const shown = query && result.q === query ? result : { q: query, gifs: null, error: null };
+  const gifs = shown.gifs;
+  const error = shown.error;
 
   return (
     <div className="mt-2 rounded-xl border border-line bg-elevated p-3 shadow-xl">
