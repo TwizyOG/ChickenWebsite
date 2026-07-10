@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { type FeedPost, type VoteValue, timeAgo } from "@/lib/forum";
 import VoteRail, { type VoteState } from "@/components/forum/VoteRail";
+import MediaViewer from "@/components/forum/MediaViewer";
 
 export function FlairChip({ name, color }: { name: string; color: string }) {
   return (
@@ -58,7 +59,8 @@ export default function PostCard({
             {title}
           </Link>
         )}
-        {post.body && (
+        <MediaViewer attachments={post.attachments} />
+        {post.body && (full || !post.attachments?.length) && (
           <p
             className={`mt-1.5 whitespace-pre-wrap text-sm text-neutral-400 ${full ? "" : "line-clamp-3"}`}
           >
