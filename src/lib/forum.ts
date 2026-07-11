@@ -193,7 +193,7 @@ export function sortTree(nodes: CommentNodeData[], sort: ThreadSort): CommentNod
   return rec(nodes);
 }
 
-async function forumFetch<T>(path: string, init?: RequestInit): Promise<T> {
+export async function forumFetch<T>(path: string, init?: RequestInit): Promise<T> {
   const r = await fetch(path, {
     cache: "no-store",
     headers: init?.body ? { "Content-Type": "application/json" } : undefined,

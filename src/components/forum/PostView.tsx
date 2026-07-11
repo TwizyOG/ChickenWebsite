@@ -118,6 +118,7 @@ export default function PostView() {
         full
         myVote={vs.myVote}
         onVote={(next) => setVote({ id: post.id, state: next })}
+        onModRemoved={() => router.push("/community")}
       />
 
       {mine && !editing && (

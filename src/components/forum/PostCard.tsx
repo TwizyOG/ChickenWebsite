@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { type FeedPost, type VoteValue, timeAgo } from "@/lib/forum";
+import { banUser, modRemove, type FeedPost, type VoteValue, timeAgo } from "@/lib/forum";
 import VoteRail, { type VoteState } from "@/components/forum/VoteRail";
 import MediaViewer from "@/components/forum/MediaViewer";
 import UserHovercard from "@/components/forum/UserHovercard";
+import { useMe } from "@/components/forum/useMe";
 
 export function FlairChip({ name, color }: { name: string; color: string }) {
   return (
@@ -24,13 +25,43 @@ export default function PostCard({
   full = false,
   myVote = 0,
   onVote,
+  onModRemoved,
 }: {
   post: FeedPost;
   full?: boolean;
   myVote?: VoteValue;
   onVote?: (next: VoteState) => void;
+  onModRemoved?: () => void;
 }) {
+  const me = useMe();
   const href = `/community/post?id=${post.id}`;
+  const isMod = me != null && !("signedOut" in me) && me.profile.role !== "user";
+  const own = me != null && !("signedOut" in me) && me.profile.kickId === post.author_kick_id;
+
+  async function modRemovePost() {
+    const reason = window.prompt("Removal reason:");
+    if (reason == null) return;
+    try {
+      await modRemove("post", post.id, reason.trim());
+      onModRemoved?.();
+    } catch (e) {
+      window.alert((e as Error).message);
+    }
+  }
+
+  async function banAuthor() {
+    const reason = window.prompt(`Ban u/${post.author_username} — reason:`);
+    if (reason == null) return;
+    const daysRaw = window.prompt("Ban length in days (blank = permanent):", "");
+    if (daysRaw == null) return;
+    const days = daysRaw.trim() ? Number(daysRaw) : null;
+    try {
+      await banUser(post.author_kick_id, reason.trim(), Number.isFinite(days ?? NaN) ? days : null);
+      window.alert(`u/${post.author_username} is banned.`);
+    } catch (e) {
+      window.alert((e as Error).message);
+    }
+  }
   const title = (
     <h2 className={`font-bold leading-snug text-neutral-100 ${full ? "text-xl" : "text-base"}`}>
       {post.title}
@@ -81,6 +112,16 @@ export default function PostCard({
             </svg>
             {post.comment_count} comments
           </Link>
+          {isMod && !own && (
+            <>
+              <button type="button" onClick={modRemovePost} className="transition-colors hover:text-mature">
+                Remove
+              </button>
+              <button type="button" onClick={banAuthor} className="transition-colors hover:text-mature">
+                Ban
+              </button>
+            </>
+          )}
         </div>
       </div>
     </article>

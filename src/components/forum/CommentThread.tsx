@@ -65,6 +65,7 @@ export default function CommentThread({
   const handlers: ThreadHandlers = {
     postId,
     myKickId: me && !("signedOut" in me) ? me.profile.kickId : null,
+    myRole: me && !("signedOut" in me) ? me.profile.role : null,
     voteState,
     onVote: (id, next) => setVoteState((prev) => ({ ...prev, [id]: next })),
     onReplyDone: (row) => {

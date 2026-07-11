@@ -2,7 +2,9 @@
 
 import { useState } from "react";
 import {
+  banUser,
   deleteComment,
+  modRemove,
   timeAgo,
   updateComment,
   type CommentNodeData,
@@ -15,6 +17,7 @@ import UserHovercard from "@/components/forum/UserHovercard";
 export type ThreadHandlers = {
   postId: string;
   myKickId: number | null;
+  myRole: "user" | "moderator" | "admin" | null;
   voteState: Record<string, VoteState>;
   onVote: (id: string, next: VoteState) => void;
   onReplyDone: (row: ThreadComment) => void;
@@ -45,6 +48,33 @@ export default function CommentNode({ node, h }: { node: CommentNodeData; h: Thr
 
   const vs = h.voteState[c.id] ?? { score: c.score, myVote: 0 as const };
   const mine = !c.removed && h.myKickId != null && c.author_kick_id === h.myKickId;
+  const amMod = h.myRole === "moderator" || h.myRole === "admin";
+
+  async function modRemoveComment() {
+    const reason = window.prompt("Removal reason:");
+    if (reason == null) return;
+    try {
+      await modRemove("comment", c.id, reason.trim());
+      h.onDeleted(c.id);
+    } catch (e) {
+      window.alert((e as Error).message);
+    }
+  }
+
+  async function banAuthor() {
+    if (c.author_kick_id == null) return;
+    const reason = window.prompt(`Ban u/${c.author_username} — reason:`);
+    if (reason == null) return;
+    const daysRaw = window.prompt("Ban length in days (blank = permanent):", "");
+    if (daysRaw == null) return;
+    const days = daysRaw.trim() ? Number(daysRaw) : null;
+    try {
+      await banUser(c.author_kick_id, reason.trim(), Number.isFinite(days ?? NaN) ? days : null);
+      window.alert(`u/${c.author_username} is banned.`);
+    } catch (e) {
+      window.alert((e as Error).message);
+    }
+  }
 
   async function saveEdit() {
     const text = draft.trim();
@@ -178,6 +208,16 @@ export default function CommentNode({ node, h }: { node: CommentNodeData; h: Thr
                       </button>
                       <button type="button" onClick={remove} className="transition-colors hover:text-mature">
                         Delete
+                      </button>
+                    </>
+                  )}
+                  {amMod && !mine && (
+                    <>
+                      <button type="button" onClick={modRemoveComment} className="transition-colors hover:text-mature">
+                        Remove
+                      </button>
+                      <button type="button" onClick={banAuthor} className="transition-colors hover:text-mature">
+                        Ban
                       </button>
                     </>
                   )}

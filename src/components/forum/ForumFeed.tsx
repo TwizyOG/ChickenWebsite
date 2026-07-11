@@ -167,6 +167,13 @@ export default function ForumFeed() {
               post={vs ? { ...p, score: vs.score } : p}
               myVote={vs?.myVote ?? 0}
               onVote={(next) => setVoteState((prev) => ({ ...prev, [p.id]: next }))}
+              onModRemoved={() =>
+                setFeed((prev) =>
+                  prev.key === key
+                    ? { ...prev, posts: (prev.posts ?? []).filter((x) => x.id !== p.id) }
+                    : prev,
+                )
+              }
             />
           );
         })}

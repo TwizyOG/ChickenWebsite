@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import ForumFeed from "@/components/forum/ForumFeed";
+import ModLink from "@/components/forum/ModLink";
 
 export const metadata = { title: "Community — ChickenAndy" };
 
@@ -15,12 +16,15 @@ export default function CommunityPage() {
               Talk RV life, streams, clips and everything ChickenAndy.
             </p>
           </div>
-          <Link
-            href="/community/submit"
-            className="shrink-0 rounded-lg bg-accent px-4 py-2 text-sm font-bold text-accent-ink transition hover:bg-accent-soft active:scale-95"
-          >
-            Create post
-          </Link>
+          <div className="flex shrink-0 items-center gap-2">
+            <ModLink />
+            <Link
+              href="/community/submit"
+              className="rounded-lg bg-accent px-4 py-2 text-sm font-bold text-accent-ink transition hover:bg-accent-soft active:scale-95"
+            >
+              Create post
+            </Link>
+          </div>
         </div>
         <div className="mt-5">
           <Suspense fallback={null}>
