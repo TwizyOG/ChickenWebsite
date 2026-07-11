@@ -14,6 +14,12 @@ import {
   timeAgo,
   type Notice,
 } from "@/lib/notifications";
+import {
+  fetchForumNotifications,
+  markForumNotificationsRead,
+  mergeBellItems,
+  type BellItem,
+} from "@/lib/forumNotifications";
 
 /* Site header matching chickenandy.vercel.app: single row with the logo,
    inline nav (lg+), search, and — when signed in — the notification bell with
@@ -62,6 +68,30 @@ function StarIcon({ className = "h-4 w-4" }: { className?: string }) {
   );
 }
 
+function ReplyIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
+      <path d="M9 17l-5-5 5-5" />
+      <path d="M20 18v-2a4 4 0 0 0-4-4H4" />
+    </svg>
+  );
+}
+
+function ShieldIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
+      <path d="M12 3l7 3v5c0 4.6-3 8.4-7 10-4-1.6-7-5.4-7-10V6z" />
+    </svg>
+  );
+}
+
+function BellItemIcon({ icon }: { icon: BellItem["icon"] }) {
+  if (icon === "live") return <LiveDotIcon />;
+  if (icon === "reply") return <ReplyIcon />;
+  if (icon === "removed") return <ShieldIcon />;
+  return <StarIcon />;
+}
+
 function LiveDotIcon() {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" className="h-4 w-4">
@@ -80,6 +110,10 @@ export default function Header() {
   const [kickUser, setKickUser] = useState<string | null>(null);
   const [profile, setProfile] = useState({ username: "", location: "", avatar: "" });
   const [notices, setNotices] = useState<Notice[]>([]);
+  const [forumBell, setForumBell] = useState<{ items: BellItem[]; unread: number }>({
+    items: [],
+    unread: 0,
+  });
   const [menu, setMenu] = useState<null | "bell" | "user">(null);
   const menusRef = useRef<HTMLDivElement>(null);
 
@@ -95,6 +129,22 @@ export default function Header() {
     setNotices(getNotices());
     return onNoticesChange(() => setNotices(getNotices()));
   }, []);
+
+  // Forum notifications (server-backed) join the bell when Kick-signed-in.
+  useEffect(() => {
+    if (!kickUser) return;
+    let stale = false;
+    const load = () =>
+      fetchForumNotifications().then((f) => {
+        if (!stale) setForumBell(f);
+      });
+    load();
+    window.addEventListener("focus", load);
+    return () => {
+      stale = true;
+      window.removeEventListener("focus", load);
+    };
+  }, [kickUser]);
 
   // Close dropdowns on outside click / Escape.
   useEffect(() => {
@@ -115,7 +165,8 @@ export default function Header() {
   const account = displayName(siteUser) || profile.username || kickUser;
   const initial = (account?.[0] || "?").toUpperCase();
   const signedIn = Boolean(siteUser || kickUser);
-  const unread = notices.filter((n) => !n.read).length;
+  const unread = notices.filter((n) => !n.read).length + forumBell.unread;
+  const bellItems = mergeBellItems(notices, forumBell.items);
 
   const isActive = (href: string) =>
     href === "/" ? pathname === "/" : pathname.startsWith(href);
@@ -244,7 +295,14 @@ export default function Header() {
                       Notifications
                     </span>
                     <button
-                      onClick={() => markAllRead()}
+                      onClick={() => {
+                        markAllRead();
+                        markForumNotificationsRead();
+                        setForumBell((prev) => ({
+                          items: prev.items.map((i) => ({ ...i, read: true })),
+                          unread: 0,
+                        }));
+                      }}
                       className="text-xs font-bold text-accent hover:text-accent-soft"
                     >
                       Mark all as read
@@ -252,22 +310,22 @@ export default function Header() {
                   </div>
                   <div className="h-px bg-line" />
                   <div className="max-h-[22rem] overflow-y-auto">
-                    {notices.length === 0 ? (
+                    {bellItems.length === 0 ? (
                       <p className="px-4 py-8 text-center text-xs text-faint">
                         No notifications yet.
                       </p>
                     ) : (
-                      notices.slice(0, 12).map((n) => (
+                      bellItems.slice(0, 12).map((n) => (
                         <Link
-                          key={n.id}
-                          href="/account/notifications"
+                          key={n.key}
+                          href={n.href}
                           onClick={() => setMenu(null)}
                           className={`flex items-start gap-3 px-4 py-3 transition hover:bg-elevated ${
                             n.read ? "" : "bg-accent/5"
                           }`}
                         >
                           <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-line bg-elevated text-accent">
-                            {n.kind === "live" ? <LiveDotIcon /> : <StarIcon />}
+                            <BellItemIcon icon={n.icon} />
                           </span>
                           <span className="min-w-0 flex-1">
                             <span className="block truncate text-sm font-semibold text-ink">

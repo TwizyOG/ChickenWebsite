@@ -57,6 +57,15 @@ export default function CommentThread({
     };
   }, [postId]);
 
+  // Deep-link (#c-{id} from bell links): scroll once the thread has rendered.
+  const loaded = shown.rows !== null;
+  useEffect(() => {
+    if (!loaded) return;
+    const hash = window.location.hash;
+    if (!hash.startsWith("#c-")) return;
+    document.getElementById(hash.slice(1))?.scrollIntoView({ block: "center" });
+  }, [loaded]);
+
   const tree = useMemo(
     () => (shown.rows ? sortTree(buildTree(shown.rows), sort) : []),
     [shown.rows, sort],

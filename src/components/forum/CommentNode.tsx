@@ -103,7 +103,7 @@ export default function CommentNode({ node, h }: { node: CommentNodeData; h: Thr
   }
 
   return (
-    <div className="mt-3">
+    <div className="mt-3" id={`c-${c.id}`}>
       <div className="flex items-start gap-2">
         <button
           type="button"
