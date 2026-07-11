@@ -274,3 +274,20 @@ export async function updatePost(id: string, body: string): Promise<void> {
 export async function deletePost(id: string): Promise<void> {
   await forumFetch(`/api/forum/posts/${id}`, { method: "DELETE" });
 }
+
+/* ------------------------------------------------------------------ */
+/* Moderation (plan 05)                                                */
+
+export async function modRemove(type: SubjectType, id: string, reason: string): Promise<void> {
+  await forumFetch(`/api/forum/${type === "post" ? "posts" : "comments"}/${id}`, {
+    method: "DELETE",
+    body: JSON.stringify({ reason }),
+  });
+}
+
+export async function banUser(kickId: number, reason: string, days: number | null): Promise<void> {
+  await forumFetch("/api/forum/mod/bans", {
+    method: "POST",
+    body: JSON.stringify({ kick_id: kickId, reason, days }),
+  });
+}
