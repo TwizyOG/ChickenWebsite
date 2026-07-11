@@ -127,6 +127,37 @@ export async function logMod(
   }
 }
 
+export type NotificationKind =
+  | "reply_post"
+  | "reply_comment"
+  | "mod_remove_post"
+  | "mod_remove_comment";
+
+/** Best-effort notification insert — never blocks the action (like logMod). */
+export async function notify(
+  profileId: string,
+  kind: NotificationKind,
+  actorId: string | null,
+  postId: string | null,
+  commentId: string | null,
+  detail?: Record<string, unknown>,
+): Promise<void> {
+  const admin = getSupabaseAdmin();
+  if (!admin) return;
+  try {
+    await admin.from("notifications").insert({
+      profile_id: profileId,
+      kind,
+      actor_id: actorId,
+      post_id: postId,
+      comment_id: commentId,
+      detail: detail ?? null,
+    });
+  } catch {
+    /* best-effort */
+  }
+}
+
 export const FORUM_SESSION_COOKIE_OPTS = {
   httpOnly: true,
   secure: true,

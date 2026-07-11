@@ -1,5 +1,5 @@
 import { type NextRequest } from "next/server";
-import { bannedResponse, jsonError, logMod, requireCaller, roleRank } from "@/lib/forumApi";
+import { bannedResponse, jsonError, logMod, notify, requireCaller, roleRank } from "@/lib/forumApi";
 import { getSupabaseAdmin } from "@/lib/supabaseAdmin";
 
 export const runtime = "nodejs";
@@ -61,7 +61,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
   if (!admin) return jsonError(500, "not_configured", "Forum backend is not configured.");
   const { data: comment, error } = await admin
     .from("comments")
-    .select("id, author_id, body, removed_at")
+    .select("id, author_id, body, post_id, removed_at")
     .eq("id", id)
     .maybeSingle();
   if (error) return jsonError(500, "db_error", error.message);
@@ -95,6 +95,14 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
       body: (comment.body as string | null)?.slice(0, 80) ?? null,
       reason,
     });
+    await notify(
+      comment.author_id as string,
+      "mod_remove_comment",
+      caller.profile.id,
+      comment.post_id as string,
+      id,
+      { excerpt: (comment.body as string | null)?.slice(0, 140) ?? "[gif]", reason },
+    );
   }
   return Response.json({ ok: true });
 }

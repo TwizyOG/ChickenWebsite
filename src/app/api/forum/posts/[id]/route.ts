@@ -1,5 +1,5 @@
 import { type NextRequest } from "next/server";
-import { bannedResponse, jsonError, logMod, requireCaller, roleRank } from "@/lib/forumApi";
+import { bannedResponse, jsonError, logMod, notify, requireCaller, roleRank } from "@/lib/forumApi";
 import { getSupabaseAdmin } from "@/lib/supabaseAdmin";
 
 export const runtime = "nodejs";
@@ -88,6 +88,10 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
   if (updError) return jsonError(500, "db_error", updError.message);
   if (!own) {
     await logMod(caller.profile.id, "remove_post", "post", id, { title: post.title, reason });
+    await notify(post.author_id as string, "mod_remove_post", caller.profile.id, id, null, {
+      post_title: post.title,
+      reason,
+    });
   }
   return Response.json({ ok: true });
 }
