@@ -85,6 +85,48 @@ export function bannedResponse(ban: ActiveBan): Response | null {
   return jsonError(403, "banned", "You are banned from the community forum.", { ban });
 }
 
+const ROLE_RANK: Record<CallerProfile["role"], number> = { user: 0, moderator: 1, admin: 2 };
+
+/** requireCaller + minimum role. */
+export async function requireRole(
+  req: NextRequest,
+  min: "moderator" | "admin",
+): Promise<Caller | Response> {
+  const caller = await requireCaller(req);
+  if (caller instanceof Response) return caller;
+  if (ROLE_RANK[caller.profile.role] < ROLE_RANK[min]) {
+    return jsonError(403, "forbidden", `That needs the ${min} role.`);
+  }
+  return caller;
+}
+
+export function roleRank(role: CallerProfile["role"]): number {
+  return ROLE_RANK[role];
+}
+
+/** Append-only audit trail — best-effort, never blocks the action. */
+export async function logMod(
+  actorId: string,
+  action: string,
+  subjectType: string | null,
+  subjectId: string | null,
+  detail?: Record<string, unknown>,
+): Promise<void> {
+  const admin = getSupabaseAdmin();
+  if (!admin) return;
+  try {
+    await admin.from("mod_log").insert({
+      actor_id: actorId,
+      action,
+      subject_type: subjectType,
+      subject_id: subjectId,
+      detail: detail ?? null,
+    });
+  } catch {
+    /* audit is best-effort */
+  }
+}
+
 export const FORUM_SESSION_COOKIE_OPTS = {
   httpOnly: true,
   secure: true,
