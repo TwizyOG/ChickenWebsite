@@ -20,10 +20,10 @@ export const RVX_EVENT = {
   id: "rvx",
   name: "RV X",
   year: "2026",
-  premise: "The 2026 Gulf Run — Austin to Miami, streamed 24/7.",
+  premise: "The 2026 cross-country run — Austin to Boston, streamed 24/7.",
   start: "04/10/26",
   end: null as string | null,
-  route: ["Austin, TX", "New Orleans, LA", "Tampa, FL", "Orlando, FL", "Miami, FL"],
+  route: ["Austin, TX", "New Orleans, LA", "Tampa, FL", "Orlando, FL", "Miami, FL", "Boston, MA"],
 };
 
 export const CITIES: City[] = [
@@ -54,8 +54,14 @@ export const CITIES: City[] = [
   {
     id: "miami", stop: 5, name: "Miami", region: "FL",
     lon: -80.1918, lat: 25.7617,
-    start: "06/25/26", end: null, status: "current",
-    blurb: "Current stop. South Beach, the marina and the final leg of the Gulf Run.",
+    start: "06/25/26", end: "07/10/26", status: "done",
+    blurb: "South Beach, the marina and the last southern stop before the long haul north.",
+  },
+  {
+    id: "boston", stop: 6, name: "Boston", region: "MA",
+    lon: -71.0589, lat: 42.3601,
+    start: "07/10/26", end: null, status: "current",
+    blurb: "Current stop. The rig ran the East Coast up to New England — Fenway, the Common and harbor-side streams.",
   },
 ];
 
@@ -83,11 +89,13 @@ export const CREW: CrewMember[] = [
   /* ---- current crew (still on the trip) ---- */
   { slug: "chickenandytv", name: "ChickenAndy", role: "Driver", bio: "The man behind the wheel. Streaming the whole ride on Kick." },
   { slug: "krispyw", name: "KrispyW", role: "Chaos dept.", bio: "If a bet exists, Krispy has already lost it." },
-  { slug: "ryanheinz", name: "Ryan Heinz", role: "Camera", bio: "Second angle, drone shots, beignet records." },
+  { slug: "m1kedanger", name: "M1keDanger", role: "Camera", bio: "Picked up the camera on the East Coast leg — drone shots and B-roll." },
   { slug: null, name: "Cam", role: "Logistics", bio: "Keeps the rig rolling and the cooler full." },
   { slug: "kikikrazy", name: "KikiKrazy", role: "Crew", bio: "IRL streamer bringing her own lens to the road trip." },
   { slug: "toneirl", name: "Tone", role: "Navigator", bio: "Reads the maps, picks the detours, owns the aux." },
   /* ---- past crew (departed the trip) ---- */
+  { slug: "ryanheinz", name: "Ryan Heinz", role: "Camera", bio: "Second angle, drone shots and beignet records through the Gulf legs.", departed: true },
+  { slug: "adrianahlee", name: "AdrianahLee", role: "Guest", bio: "Linked up with the crew on the road before heading out.", departed: true },
   { slug: "tazo", name: "Tazo", role: "Crew", bio: "On the road with the crew for the Gulf run.", departed: true },
   { slug: "oceanadventures", name: "Ocean Adventures", role: "Special guest", bio: "Joined the rig for the Florida legs.", departed: true },
   { slug: "sainttenn", name: "Saint Tenn", role: "Guest", bio: "Rolled with the crew through the early legs of the trip.", departed: true },
@@ -138,7 +146,8 @@ const DAY_NOTES: Record<number, string> = {
   57: "Theme-park week begins. Andy vs the teacup ride. Cam finally drives (a golf cart).",
   62: "Last Orlando night — packing up for the run down to South Florida.",
   77: "I-95 south into Miami. Palm trees, causeways, and the marina lot for the final leg.",
-  84: "Live most evenings from South Beach — map updates as we roll. The Gulf Run's last chapter.",
+  84: "Live most evenings from South Beach — map updates as we roll. The southern run's last chapter.",
+  92: "Long haul north. The rig ran the East Coast up to Boston — first night parked near the harbor.",
 };
 
 export type TimelineDay = { day: number; date: string; city: string; note: string };
@@ -161,7 +170,7 @@ export function buildTimeline(): TimelineDay[] {
 
 /* ---- clips + VODs (ported from data.js, mapped across the RV X trip) ----- */
 const fmt = (d: Date) => `${pad(d.getMonth() + 1)}/${pad(d.getDate())}/${String(d.getFullYear()).slice(2)}`;
-const TRIP_TODAY = new Date(2026, 6, 3); // 07/03/26
+const TRIP_TODAY = new Date(2026, 6, 12); // 07/12/26
 
 export type Media = {
   id: string;
