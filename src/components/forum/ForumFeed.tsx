@@ -112,6 +112,8 @@ export default function ForumFeed() {
   const cursor = useRef<FeedCursor>(null);
   const offset = useRef(0);
   const loading = useRef(false);
+  const rerun = useRef(false);
+  const loadMoreRef = useRef<(reset: boolean) => void>(() => {});
   const sentinel = useRef<HTMLDivElement | null>(null);
 
   const setQuery = (nextSort: FeedSort, nextFlair: number | null, nextQ: string) => {
@@ -124,7 +126,10 @@ export default function ForumFeed() {
 
   const loadMore = useCallback(
     async (reset: boolean) => {
-      if (loading.current) return;
+      if (loading.current) {
+        if (reset) rerun.current = true; // queue a fresh load for the latest key
+        return;
+      }
       loading.current = true;
       try {
         let page: FeedPost[];
@@ -166,10 +171,20 @@ export default function ForumFeed() {
         }));
       } finally {
         loading.current = false;
+        if (rerun.current) {
+          rerun.current = false;
+          loadMoreRef.current(true); // re-fetch for the current key via the freshest closure
+        }
       }
     },
     [sort, flair, q, key],
   );
+
+  // Let the finally-block retry reach the freshest loadMore, so a load queued
+  // (rerun) while another was in flight re-fetches for the CURRENT key.
+  useEffect(() => {
+    loadMoreRef.current = loadMore;
+  }, [loadMore]);
 
   useEffect(() => {
     fetchFlairs().then(setFlairs).catch(() => {});
