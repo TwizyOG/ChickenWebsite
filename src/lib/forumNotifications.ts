@@ -73,6 +73,8 @@ export function toBellItems(rows: ForumNotification[]): BellItem[] {
         return item(n, "removed", "Moderators removed your post", joinSub(title, reason), href);
       case "mod_remove_comment":
         return item(n, "removed", "Moderators removed your comment", joinSub(excerpt, reason), href);
+      default:
+        return item(n, "account", "Forum notification", title ?? excerpt, href);
     }
   });
 }

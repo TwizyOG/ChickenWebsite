@@ -51,6 +51,42 @@ describe("toBellItems", () => {
     const [item] = toBellItems([n({ post_id: null, comment_id: null })]);
     expect(item.href).toBe("/community");
   });
+
+  it("maps a mod comment removal anonymously with excerpt + reason", () => {
+    const [item] = toBellItems([
+      n({
+        kind: "mod_remove_comment",
+        actor_username: "modguy",
+        detail: { excerpt: "nice rig", reason: "spam" },
+      }),
+    ]);
+    expect(item.text).toBe("Moderators removed your comment");
+    expect(item.text).not.toContain("modguy");
+    expect(item.sub).toBe("“nice rig” — spam");
+    expect(item.icon).toBe("removed");
+  });
+
+  it("falls back to Someone when the actor is missing", () => {
+    const [item] = toBellItems([n({ actor_username: null })]);
+    expect(item.text).toBe("u/Someone replied to your post");
+  });
+
+  it("falls back across detail fields for the sub line", () => {
+    const [postReply] = toBellItems([n({ detail: { excerpt: "only excerpt" } })]);
+    expect(postReply.sub).toBe("only excerpt");
+    const [commentReply] = toBellItems([
+      n({ kind: "reply_comment", detail: { post_title: "only title" } }),
+    ]);
+    expect(commentReply.sub).toBe("only title");
+  });
+
+  it("renders an unknown kind as a generic item instead of crashing", () => {
+    const rogue = n({ kind: "mention" as unknown as ForumNotification["kind"] });
+    const [item] = toBellItems([rogue]);
+    expect(item.text).toBe("Forum notification");
+    expect(item.icon).toBe("account");
+    expect(item.href).toBe("/community/post?id=p1#c-c1");
+  });
 });
 
 describe("mergeBellItems", () => {
