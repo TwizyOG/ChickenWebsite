@@ -51,6 +51,16 @@ export default function RootLayout({
             <KickAutoSubscribe />
             <FavoriteLiveWatcher />
             <SiteChrome>
+              {/* Top banner (from chickenandy.com). object-cover crops the
+                  image's white top/bottom bands so it sits flush. */}
+              <div className="w-full overflow-hidden border-b border-line bg-black">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/banner.png"
+                  alt="ChickenAndy"
+                  className="block h-14 w-full scale-[1.35] object-cover object-center sm:h-20 lg:h-28"
+                />
+              </div>
               <Header />
             </SiteChrome>
             <main className="flex-1 w-full">{children}</main>
