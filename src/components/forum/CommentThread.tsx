@@ -108,6 +108,13 @@ export default function CommentThread({
             : r,
         ),
       })),
+    onPurged: (id) => {
+      setState((prev) => ({
+        ...prev,
+        rows: (prev.rows ?? []).filter((r) => r.id !== id),
+      }));
+      onCountChange?.(-1);
+    },
   };
 
   return (

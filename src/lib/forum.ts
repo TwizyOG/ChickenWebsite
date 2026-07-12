@@ -361,3 +361,11 @@ export async function dismissReports(type: SubjectType, id: string): Promise<voi
     body: JSON.stringify({ subject_type: type, subject_id: id, action: "dismiss" }),
   });
 }
+
+/** Admin-only: permanently delete a removed leaf comment (clear its tombstone). */
+export async function purgeComment(id: string): Promise<void> {
+  await forumFetch("/api/forum/mod/purge", {
+    method: "POST",
+    body: JSON.stringify({ comment_id: id }),
+  });
+}

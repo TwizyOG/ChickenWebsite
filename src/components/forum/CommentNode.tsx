@@ -5,6 +5,7 @@ import {
   banUser,
   deleteComment,
   modRemove,
+  purgeComment,
   timeAgo,
   updateComment,
   type CommentNodeData,
@@ -24,6 +25,7 @@ export type ThreadHandlers = {
   onReplyDone: (row: ThreadComment) => void;
   onEdited: (row: ThreadComment) => void;
   onDeleted: (id: string) => void;
+  onPurged: (id: string) => void;
 };
 
 function RoleBadge({ role }: { role: string | null }) {
@@ -51,6 +53,17 @@ export default function CommentNode({ node, h }: { node: CommentNodeData; h: Thr
   const vs = h.voteState[c.id] ?? { score: c.score, myVote: 0 as const };
   const mine = !c.removed && h.myKickId != null && c.author_kick_id === h.myKickId;
   const amMod = h.myRole === "moderator" || h.myRole === "admin";
+  const amAdmin = h.myRole === "admin";
+
+  async function purge() {
+    if (!window.confirm("Permanently remove this comment? This can't be undone.")) return;
+    try {
+      await purgeComment(c.id);
+      h.onPurged(c.id);
+    } catch (e) {
+      window.alert((e as Error).message);
+    }
+  }
 
   async function modRemoveComment() {
     const reason = window.prompt("Removal reason:");
@@ -177,6 +190,16 @@ export default function CommentNode({ node, h }: { node: CommentNodeData; h: Thr
                     <img src={c.gif_url} alt="GIF" loading="lazy" className="mt-1.5 max-h-64 rounded-lg" />
                   )}
                 </>
+              )}
+
+              {c.removed && amAdmin && node.children.length === 0 && (
+                <button
+                  type="button"
+                  onClick={purge}
+                  className="mt-1 text-xs font-semibold text-neutral-600 transition-colors hover:text-mature"
+                >
+                  Remove permanently
+                </button>
               )}
 
               {!c.removed && !editing && (
