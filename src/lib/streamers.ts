@@ -12,20 +12,22 @@ import type { Streamer } from "./types";
 
 /** Featured RV crew (the "FEATURED / RV CREW" rail on the live site). */
 const CREW = new Set([
+  "chickenandy",
   "chickenandytv",
   "kikikrazy",
   "krispyw",
-  "ryanheinz",
-  "tazo",
   "toneirl",
+  "m1kedanger",
 ]);
 
 /** Special guest travelling with the crew. */
-const GUEST = new Set(["oceanadventures"]);
+const GUEST = new Set<string>([]);
 
 /** Display-name casing captured from the live cards (Kick corrects on hydrate). */
 const NAMES: Record<string, string> = {
+  chickenandy: "ChickenAndy",
   chickenandytv: "ChickenAndyTv",
+  m1kedanger: "M1keDanger",
   kikikrazy: "kikikrazy",
   krispyw: "KrispyW",
   ryanheinz: "ryanheinz",
@@ -64,7 +66,7 @@ const SLUGS: string[] = [
   "hyubsama", "iceposeidon", "iduncle", "iholly", "jackie", "jacob_live",
   "jandro", "jjstream", "jollyrancherzoo", "kadobell", "kangjoel", "kick_clipz",
   "kikikrazy", "kimmee", "kinocasinogaming", "kodakblack", "krispyw",
-  "lifeismizzy", "lordhito", "loulz", "luplupka", "mercoffdaperc", "mhyochi",
+  "lifeismizzy", "lordhito", "loulz", "luplupka", "m1kedanger", "mercoffdaperc", "mhyochi",
   "minettelive", "moises", "mruktikktokofficial", "nanapips", "nanatty", "nedx",
   "nerdballertv", "nickfuentes", "nicklee", "nickwhite", "oceanadventures",
   "official_ebz", "oggeezerlive", "onesonicirl", "oumb", "peggyb", "peteyplastic",
@@ -85,8 +87,7 @@ export const STREAMERS: Streamer[] = SLUGS.map((slug) => ({
 
 /** Crew first (in canonical order), then everyone else alphabetically. */
 const CREW_ORDER = [
-  "chickenandytv", "kikikrazy", "ryanheinz", "krispyw", "toneirl", "tazo",
-  "oceanadventures",
+  "chickenandy", "chickenandytv", "kikikrazy", "krispyw", "toneirl", "m1kedanger",
 ];
 export const CREW_STREAMERS: Streamer[] = CREW_ORDER
   .map((s) => STREAMERS.find((x) => x.slug === s))

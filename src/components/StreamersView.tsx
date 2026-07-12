@@ -7,16 +7,16 @@ import { STREAMERS, CREW_STREAMERS, TOTAL_STREAMERS } from "@/lib/streamers";
 import { fmtCount } from "@/lib/kick";
 import { useKickMap } from "./KickProvider";
 import StreamerRow from "./StreamerRow";
+import OfflineCard from "./OfflineCard";
 import StreamerDetail from "./StreamerDetail";
 import type { Streamer } from "@/lib/types";
 
-/* Streamers page matching chickenandy.vercel.app/streamers: "All Live
-   Streamers / Browse everyone live" header with sort + live-count chip,
-   platform filter chips, the star/channel helper line, the live grid, the
-   stats row and the community blocks — plus the retained full 113-channel
-   roster (crew rail + offline directory) hydrating live from Kick. */
+/* Streamers page matching chickenandy.com/streamers: the featured RV crew rail
+   on top, then the live directory ("All Live Streamers" — horizontal rows with
+   viewers + Watch), a stats row, and the offline directory as a compact card
+   grid with a show-more / show-less control. */
 
-const OFFLINE_PREVIEW = 15;
+const OFFLINE_PREVIEW = 12;
 
 function SectionTitle({ children, count }: { children: React.ReactNode; count?: number }) {
   return (
@@ -70,10 +70,23 @@ export default function StreamersView() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
-      {/* header row */}
-      <header className="mb-6 flex flex-wrap items-end justify-between gap-4">
+      {/* Featured / RV crew — top of the page */}
+      {crew.length > 0 && (
+        <section className="mb-10">
+          <SectionTitle count={crew.length}>Featured / RV Crew</SectionTitle>
+          <p className="mt-1 text-sm text-faint">The crew on the trip</p>
+          <div className="mt-5 overflow-hidden rounded-xl border border-accent/25 bg-panel">
+            {crew.map((s) => (
+              <StreamerRow key={s.slug} streamer={s} onInfo={setDetail} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* All live streamers header */}
+      <header className="mb-4 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="font-display text-3xl font-extrabold uppercase sm:text-4xl">
+          <h1 className="font-display text-2xl font-extrabold uppercase sm:text-3xl">
             All Live Streamers
           </h1>
           <p className="mt-1 text-sm text-dim">Browse everyone live</p>
@@ -94,8 +107,8 @@ export default function StreamersView() {
         </div>
       </header>
 
-      {/* platform legend + helper bar (1:1 with the live site) */}
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-x-6 gap-y-2 rounded-xl border border-line bg-panel/50 px-4 py-3 text-xs text-neutral-500">
+      {/* platform legend + helper bar */}
+      <div className="mb-5 flex flex-wrap items-center justify-between gap-x-6 gap-y-2 rounded-xl border border-line bg-panel/50 px-4 py-3 text-xs text-neutral-500">
         <div className="flex items-center gap-4">
           {(
             [
@@ -113,14 +126,7 @@ export default function StreamersView() {
         <div className="flex flex-wrap items-center gap-x-5 gap-y-1">
           <span>Click any streamer to view their channel</span>
           <span className="flex items-center gap-1.5">
-            <svg
-              viewBox="0 0 24 24"
-              fill="currentColor"
-              stroke="currentColor"
-              strokeWidth="1.8"
-              strokeLinejoin="round"
-              className="h-3 w-3"
-            >
+            <svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" className="h-3 w-3">
               <path d="M12 3l2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 18l-5.8 3 1.1-6.5L2.6 9.8l6.5-.9L12 3z" />
             </svg>
             Tap the star to add a favorite
@@ -168,36 +174,43 @@ export default function StreamersView() {
         <Stat label="Top Stream" value={fmtCount(topViewers)} sub="Highest viewers now" />
       </section>
 
-      {/* Featured / RV crew (retained roster rail) */}
-      {crew.length > 0 && (
-        <section className="mb-12">
-          <SectionTitle count={crew.length}>Featured / RV Crew</SectionTitle>
-          <p className="mt-1 text-sm text-faint">The crew on the trip</p>
-          <div className="mt-5 overflow-hidden rounded-xl border border-accent/25 bg-panel">
-            {crew.map((s) => (
-              <StreamerRow key={s.slug} streamer={s} onInfo={setDetail} />
-            ))}
-          </div>
-        </section>
-      )}
-
-      {/* Offline directory (retained full roster) */}
+      {/* Offline directory — compact card grid */}
       {offlineList.length > 0 && (
         <section className="mb-12">
           <SectionTitle count={offlineList.length}>Offline Streamers</SectionTitle>
-          <div className="mt-5 overflow-hidden rounded-xl border border-line bg-panel">
+          <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {offlineShown.map((s) => (
-              <StreamerRow key={s.slug} streamer={s} onInfo={setDetail} />
+              <OfflineCard key={s.slug} streamer={s} onInfo={setDetail} />
             ))}
           </div>
-          {!showAllOffline && offlineList.length > OFFLINE_PREVIEW && (
-            <div className="mt-8 flex justify-center">
-              <button
-                onClick={() => setShowAllOffline(true)}
-                className="rounded-full border border-line bg-elevated px-6 py-2.5 text-sm font-semibold uppercase tracking-wide text-dim transition hover:border-accent/50 hover:text-accent"
-              >
-                View all {offlineList.length} offline streamers
-              </button>
+          {offlineList.length > OFFLINE_PREVIEW && (
+            <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+              {!showAllOffline ? (
+                <button
+                  onClick={() => setShowAllOffline(true)}
+                  className="rounded-full border border-line bg-elevated px-6 py-2.5 text-sm font-semibold uppercase tracking-wide text-dim transition hover:border-accent/50 hover:text-accent"
+                >
+                  View all {offlineList.length} offline streamers
+                </button>
+              ) : (
+                <>
+                  <button
+                    onClick={() => setShowAllOffline(false)}
+                    className="rounded-full border border-line bg-elevated px-6 py-2.5 text-sm font-semibold uppercase tracking-wide text-dim transition hover:border-accent/50 hover:text-accent"
+                  >
+                    Show less
+                  </button>
+                  <button
+                    onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+                    className="inline-flex items-center gap-1.5 rounded-full border border-accent/40 px-6 py-2.5 text-sm font-semibold uppercase tracking-wide text-accent transition hover:bg-accent/10"
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5">
+                      <path d="M12 19V5M5 12l7-7 7 7" />
+                    </svg>
+                    Top of page
+                  </button>
+                </>
+              )}
             </div>
           )}
         </section>
