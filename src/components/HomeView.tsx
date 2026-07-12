@@ -19,6 +19,12 @@ export default function HomeView() {
   const [detail, setDetail] = useState<Streamer | null>(null);
 
   const autoFeatured = useMemo(() => {
+    // ChickenAndy is always the featured stream when he's live (his main
+    // channel first, then the RVX cam). Otherwise the highest-viewer live
+    // channel, falling back to a default when nobody's live.
+    for (const slug of ["chickenandy", "chickenandytv"]) {
+      if (live[slug]?.live) return slug;
+    }
     const liveOnes = STREAMERS.map((s) => live[s.slug]).filter((d) => d?.live);
     if (liveOnes.length) return [...liveOnes].sort((a, b) => b.viewers - a.viewers)[0].slug;
     return "wvagabond";
