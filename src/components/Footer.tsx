@@ -7,6 +7,7 @@ const COLS: { title: string; links: { label: string; href: string }[] }[] = [
     links: [
       { label: "Home", href: "/" },
       { label: "Streamers", href: "/streamers" },
+      { label: "Events", href: "/events" },
       { label: "Community", href: "/community" },
       { label: "Store", href: "/store" },
       { label: "About", href: "/about" },

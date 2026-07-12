@@ -32,7 +32,7 @@ import {
 const NAV = [
   { href: "/", label: "Home" },
   { href: "/streamers", label: "Streamers" },
-  { href: "/rvx", label: "RV X" },
+  { href: "/events", label: "Events" },
   { href: "/community", label: "Community" },
   { href: "/store", label: "Store" },
   { href: "/about", label: "About" },
@@ -186,8 +186,12 @@ export default function Header() {
   const unread = notices.filter((n) => !n.read).length + forumBell.unread;
   const bellItems = mergeBellItems(notices, forumBell.items);
 
-  const isActive = (href: string) =>
-    href === "/" ? pathname === "/" : pathname.startsWith(href);
+  const isActive = (href: string) => {
+    if (href === "/") return pathname === "/";
+    // The Events tab also covers the RV X trip hub (an event's detail page).
+    if (href === "/events") return pathname.startsWith("/events") || pathname.startsWith("/rvx");
+    return pathname.startsWith(href);
+  };
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
