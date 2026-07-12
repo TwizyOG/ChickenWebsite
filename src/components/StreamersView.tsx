@@ -201,15 +201,10 @@ export default function StreamersView() {
       {/* community blocks */}
       <section className="grid gap-4 lg:grid-cols-2">
         <div className="rounded-2xl border border-line bg-panel p-6 sm:p-8">
-          <div className="flex items-center gap-2">
-            <h3 className="font-display text-lg font-extrabold uppercase">Community</h3>
-            <span className="rounded-full border border-line px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-faint">
-              Coming soon
-            </span>
-          </div>
+          <h3 className="font-display text-lg font-extrabold uppercase">Community</h3>
           <p className="mt-2 text-sm leading-relaxed text-dim">
             Forums for RV life, stream chat, clips and feedback — a home for the ChickenAndy
-            community even when streams are offline.
+            community even when streams are offline. Now live.
           </p>
           <Link
             href="/community"
