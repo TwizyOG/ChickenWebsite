@@ -81,6 +81,8 @@ export default function CommentThread({
     onVote: (id, next) => setVoteState((prev) => ({ ...prev, [id]: next })),
     onReplyDone: (row) => {
       setState((prev) => ({ ...prev, rows: [...(prev.rows ?? []), row] }));
+      // The author implicitly upvoted their own comment (server starts it at 1).
+      setVoteState((prev) => ({ ...prev, [row.id]: { score: row.score, myVote: 1 } }));
       onCountChange?.(1);
     },
     onEdited: (row) =>
