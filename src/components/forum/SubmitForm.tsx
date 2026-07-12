@@ -14,6 +14,7 @@ import {
   type PendingFile,
 } from "@/lib/forumMedia";
 import { FlairChip } from "@/components/forum/PostCard";
+import MarkdownEditor from "@/components/forum/MarkdownEditor";
 
 const MAX_TITLE = 300;
 const MAX_BODY = 10_000;
@@ -224,14 +225,15 @@ export default function SubmitForm() {
       <label className="block text-xs font-semibold uppercase tracking-wide text-neutral-500">
         Body <span className="text-neutral-600">(optional)</span>
       </label>
-      <textarea
-        value={body}
-        maxLength={MAX_BODY}
-        onChange={(e) => setBody(e.target.value)}
-        rows={5}
-        placeholder="Text (optional)"
-        className="mt-2 w-full resize-y rounded-lg border border-line bg-transparent px-3 py-2 text-sm text-neutral-100 outline-none transition-colors placeholder:text-neutral-600 focus:border-accent"
-      />
+      <div className="mt-2">
+        <MarkdownEditor
+          value={body}
+          onChange={setBody}
+          rows={5}
+          maxLength={MAX_BODY}
+          placeholder="Text (optional) — supports markdown"
+        />
+      </div>
 
       <label className="mt-4 block text-xs font-semibold uppercase tracking-wide text-neutral-500">
         Media <span className="text-neutral-600">(optional — images, one video, or a clip link)</span>

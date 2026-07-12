@@ -15,6 +15,7 @@ import VoteRail, { type VoteState } from "@/components/forum/VoteRail";
 import CommentComposer from "@/components/forum/CommentComposer";
 import UserHovercard from "@/components/forum/UserHovercard";
 import ReportDialog from "@/components/forum/ReportDialog";
+import { Markdown } from "@/lib/markdown";
 
 export type ThreadHandlers = {
   postId: string;
@@ -184,7 +185,9 @@ export default function CommentNode({ node, h }: { node: CommentNodeData; h: Thr
               ) : (
                 <>
                   {c.body && (
-                    <p className="mt-1 whitespace-pre-wrap text-sm text-neutral-200">{c.body}</p>
+                    <div className="mt-1 text-sm text-neutral-200">
+                      <Markdown text={c.body} />
+                    </div>
                   )}
                   {c.gif_url && (
                     <img src={c.gif_url} alt="GIF" loading="lazy" className="mt-1.5 max-h-64 rounded-lg" />

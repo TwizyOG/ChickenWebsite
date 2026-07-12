@@ -5,6 +5,7 @@ import { appOrigin, createComment, type GifResult, type ThreadComment } from "@/
 import { kickLoginConfigured, startKickLogin } from "@/lib/kickAuth";
 import { useMe } from "@/components/forum/useMe";
 import GifPicker from "@/components/forum/GifPicker";
+import MarkdownEditor from "@/components/forum/MarkdownEditor";
 
 const MAX_BODY = 5_000;
 
@@ -84,14 +85,13 @@ export default function CommentComposer({
 
   return (
     <div>
-      <textarea
+      <MarkdownEditor
         value={body}
+        onChange={setBody}
         autoFocus={autoFocus}
         maxLength={MAX_BODY}
-        onChange={(e) => setBody(e.target.value)}
         rows={parentId ? 2 : 3}
         placeholder={parentId ? "Reply…" : "What are your thoughts?"}
-        className="w-full resize-y rounded-lg border border-line bg-transparent px-3 py-2 text-sm text-neutral-100 outline-none transition-colors placeholder:text-neutral-600 focus:border-accent"
       />
       {gif && (
         <div className="relative mt-1.5 inline-block">

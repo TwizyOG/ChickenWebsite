@@ -7,6 +7,7 @@ import VoteRail, { type VoteState } from "@/components/forum/VoteRail";
 import MediaViewer from "@/components/forum/MediaViewer";
 import UserHovercard from "@/components/forum/UserHovercard";
 import { useMe } from "@/components/forum/useMe";
+import { Markdown } from "@/lib/markdown";
 import ReportDialog from "@/components/forum/ReportDialog";
 
 export function FlairChip({ name, color }: { name: string; color: string }) {
@@ -97,13 +98,17 @@ export default function PostCard({
           </Link>
         )}
         <MediaViewer attachments={post.attachments} />
-        {post.body && (full || !post.attachments?.length) && (
-          <p
-            className={`mt-1.5 whitespace-pre-wrap text-sm text-neutral-400 ${full ? "" : "line-clamp-3"}`}
-          >
-            {post.body}
-          </p>
-        )}
+        {post.body &&
+          (full || !post.attachments?.length) &&
+          (full ? (
+            <div className="mt-1.5 text-sm text-neutral-300">
+              <Markdown text={post.body} />
+            </div>
+          ) : (
+            <p className="mt-1.5 line-clamp-3 whitespace-pre-wrap text-sm text-neutral-400">
+              {post.body}
+            </p>
+          ))}
         <div className="mt-2 flex items-center gap-3 text-xs font-semibold text-neutral-500">
           <Link href={href} className="flex items-center gap-1.5 transition-colors hover:text-neutral-300">
             <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
