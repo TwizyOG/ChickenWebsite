@@ -13,6 +13,7 @@ import {
 import VoteRail, { type VoteState } from "@/components/forum/VoteRail";
 import CommentComposer from "@/components/forum/CommentComposer";
 import UserHovercard from "@/components/forum/UserHovercard";
+import ReportDialog from "@/components/forum/ReportDialog";
 
 export type ThreadHandlers = {
   postId: string;
@@ -45,6 +46,7 @@ export default function CommentNode({ node, h }: { node: CommentNodeData; h: Thr
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState("");
   const [busy, setBusy] = useState(false);
+  const [reporting, setReporting] = useState(false);
 
   const vs = h.voteState[c.id] ?? { score: c.score, myVote: 0 as const };
   const mine = !c.removed && h.myKickId != null && c.author_kick_id === h.myKickId;
@@ -194,6 +196,15 @@ export default function CommentNode({ node, h }: { node: CommentNodeData; h: Thr
                   >
                     Reply
                   </button>
+                  {!mine && (
+                    <button
+                      type="button"
+                      onClick={() => setReporting(true)}
+                      className="transition-colors hover:text-neutral-300"
+                    >
+                      Report
+                    </button>
+                  )}
                   {mine && (
                     <>
                       <button
@@ -222,6 +233,10 @@ export default function CommentNode({ node, h }: { node: CommentNodeData; h: Thr
                     </>
                   )}
                 </div>
+              )}
+
+              {reporting && (
+                <ReportDialog type="comment" id={c.id} onClose={() => setReporting(false)} />
               )}
 
               {replying && (

@@ -87,6 +87,23 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
     })
     .eq("id", id);
   if (updError) return jsonError(500, "db_error", updError.message);
+
+  // Removal resolves any open reports on this content (best-effort).
+  try {
+    await admin
+      .from("reports")
+      .update({
+        resolved_at: new Date().toISOString(),
+        resolved_by: caller.profile.id,
+        resolution: "removed",
+      })
+      .eq("subject_type", "post")
+      .eq("subject_id", id)
+      .is("resolved_at", null);
+  } catch {
+    /* best-effort */
+  }
+
   if (!own) {
     await logMod(caller.profile.id, "remove_post", "post", id, { title: post.title, reason });
     await notify(post.author_id as string, "mod_remove_post", caller.profile.id, id, null, {

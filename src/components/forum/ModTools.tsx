@@ -2,11 +2,20 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { fetchFlairs, forumFetch, timeAgo, type Flair } from "@/lib/forum";
+import {
+  dismissReports,
+  fetchFlairs,
+  fetchModReports,
+  forumFetch,
+  modRemove,
+  timeAgo,
+  type Flair,
+  type ModReportGroup,
+} from "@/lib/forum";
 import { useMe } from "@/components/forum/useMe";
 import { FlairChip } from "@/components/forum/PostCard";
 
-type Tab = "queue" | "bans" | "flairs" | "roles";
+type Tab = "reports" | "queue" | "bans" | "flairs" | "roles";
 
 type QueueData = {
   posts: {
@@ -104,6 +113,110 @@ function Queue() {
           </p>
         ))}
       </section>
+    </div>
+  );
+}
+
+function Reports() {
+  const [groups, setGroups] = useState<ModReportGroup[] | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const load = useCallback(() => {
+    fetchModReports()
+      .then(setGroups)
+      .catch((e) => setError(e.message));
+  }, []);
+  useEffect(load, [load]);
+
+  async function dismiss(g: ModReportGroup) {
+    try {
+      setError(null);
+      await dismissReports(g.subject_type, g.subject_id);
+      load();
+    } catch (e) {
+      setError((e as Error).message);
+    }
+  }
+  async function removeContent(g: ModReportGroup) {
+    const reason = window.prompt("Removal reason:");
+    if (reason == null) return;
+    try {
+      setError(null);
+      await modRemove(g.subject_type, g.subject_id, reason.trim());
+      load();
+    } catch (e) {
+      setError((e as Error).message);
+    }
+  }
+
+  if (error) return <p className="mt-4 text-sm text-mature">{error}</p>;
+  if (!groups) return <div className="mt-4 h-32 animate-pulse rounded-lg bg-white/5" />;
+  return (
+    <div className="mt-4 space-y-2 text-xs">
+      {groups.length === 0 && <p className="text-neutral-600">No open reports. Quiet day.</p>}
+      {groups.map((g) => {
+        const href =
+          g.subject_type === "post"
+            ? `/community/post?id=${g.subject_id}`
+            : g.preview && "post_id" in g.preview
+              ? `/community/post?id=${g.preview.post_id}#c-${g.subject_id}`
+              : "/community";
+        return (
+          <div key={`${g.subject_type}:${g.subject_id}`} className="rounded-lg border border-line bg-panel p-2.5">
+            <div className="flex items-center gap-2">
+              <span className="rounded bg-mature/15 px-1.5 py-px text-[10px] font-bold uppercase text-mature">
+                {g.count} report{g.count === 1 ? "" : "s"}
+              </span>
+              <span className="text-neutral-500">
+                {Object.entries(g.reasons)
+                  .map(([r, c]) => `${r} ×${c}`)
+                  .join(" · ")}
+              </span>
+              <span className="flex-1" />
+              <span className="text-neutral-600">{timeAgo(g.last_at)} ago</span>
+            </div>
+            <p className="mt-1.5 font-semibold text-neutral-200">
+              {g.preview
+                ? "title" in g.preview
+                  ? g.preview.title
+                  : g.preview.body
+                : "(content unavailable)"}
+              {g.preview?.removed && (
+                <span className="ml-2 rounded bg-white/10 px-1 py-px text-[9px] font-bold uppercase text-neutral-400">
+                  already removed
+                </span>
+              )}
+            </p>
+            <p className="mt-0.5 text-neutral-500">
+              {g.subject_type} by u/{g.preview?.author_username ?? "?"} · reported by{" "}
+              {g.reporters.map((r) => `u/${r}`).join(", ")}
+              {g.details.length > 0 && (
+                <>
+                  {" "}
+                  · <span className="italic">&ldquo;{g.details[0]}&rdquo;</span>
+                </>
+              )}
+            </p>
+            <div className="mt-2 flex items-center gap-2">
+              <Link href={href} className="text-accent hover:underline">
+                View
+              </Link>
+              <span className="flex-1" />
+              <button type="button" onClick={() => dismiss(g)} className={btnCls}>
+                Dismiss
+              </button>
+              {!g.preview?.removed && (
+                <button
+                  type="button"
+                  onClick={() => removeContent(g)}
+                  className={`${btnCls} hover:text-mature`}
+                >
+                  Remove content
+                </button>
+              )}
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -309,7 +422,7 @@ function Roles({ isAdmin }: { isAdmin: boolean }) {
 
 export default function ModTools() {
   const me = useMe();
-  const [tab, setTab] = useState<Tab>("queue");
+  const [tab, setTab] = useState<Tab>("reports");
 
   if (me === null) return <div className="h-40 animate-pulse rounded-xl border border-line bg-panel" />;
   if ("signedOut" in me || me.profile.role === "user") {
@@ -324,6 +437,7 @@ export default function ModTools() {
   }
   const isAdmin = me.profile.role === "admin";
   const tabs: { id: Tab; label: string }[] = [
+    { id: "reports", label: "Reports" },
     { id: "queue", label: "Queue" },
     { id: "bans", label: "Bans" },
     { id: "flairs", label: "Flairs" },
@@ -344,6 +458,7 @@ export default function ModTools() {
           </button>
         ))}
       </div>
+      {tab === "reports" && <Reports />}
       {tab === "queue" && <Queue />}
       {tab === "bans" && <Bans />}
       {tab === "flairs" && <Flairs isAdmin={isAdmin} />}

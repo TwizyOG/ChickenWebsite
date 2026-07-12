@@ -312,3 +312,52 @@ export async function banUser(kickId: number, reason: string, days: number | nul
     body: JSON.stringify({ kick_id: kickId, reason, days }),
   });
 }
+
+/* ------------------------------------------------------------------ */
+/* Reports (plan 06)                                                   */
+
+export type ReportReason = "spam" | "harassment" | "nsfw" | "misinfo" | "other";
+
+export async function reportContent(
+  type: SubjectType,
+  id: string,
+  reason: ReportReason,
+  detail: string,
+): Promise<{ ok?: boolean; already?: boolean }> {
+  return forumFetch("/api/forum/reports", {
+    method: "POST",
+    body: JSON.stringify({
+      subject_type: type,
+      subject_id: id,
+      reason,
+      detail: detail || undefined,
+    }),
+  });
+}
+
+export type ModReportGroup = {
+  subject_type: SubjectType;
+  subject_id: string;
+  count: number;
+  reasons: Record<string, number>;
+  reporters: string[];
+  details: string[];
+  first_at: string;
+  last_at: string;
+  preview:
+    | { title: string; author_username: string; removed: boolean }
+    | { body: string; post_id: string; author_username: string; removed: boolean }
+    | null;
+};
+
+export async function fetchModReports(): Promise<ModReportGroup[]> {
+  const j = await forumFetch<{ reports: ModReportGroup[] }>("/api/forum/mod/reports");
+  return j.reports;
+}
+
+export async function dismissReports(type: SubjectType, id: string): Promise<void> {
+  await forumFetch("/api/forum/mod/reports", {
+    method: "POST",
+    body: JSON.stringify({ subject_type: type, subject_id: id, action: "dismiss" }),
+  });
+}

@@ -1,11 +1,13 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { banUser, modRemove, type FeedPost, type VoteValue, timeAgo } from "@/lib/forum";
 import VoteRail, { type VoteState } from "@/components/forum/VoteRail";
 import MediaViewer from "@/components/forum/MediaViewer";
 import UserHovercard from "@/components/forum/UserHovercard";
 import { useMe } from "@/components/forum/useMe";
+import ReportDialog from "@/components/forum/ReportDialog";
 
 export function FlairChip({ name, color }: { name: string; color: string }) {
   return (
@@ -37,6 +39,7 @@ export default function PostCard({
   const href = `/community/post?id=${post.id}`;
   const isMod = me != null && !("signedOut" in me) && me.profile.role !== "user";
   const own = me != null && !("signedOut" in me) && me.profile.kickId === post.author_kick_id;
+  const [reporting, setReporting] = useState(false);
 
   async function modRemovePost() {
     const reason = window.prompt("Removal reason:");
@@ -112,6 +115,15 @@ export default function PostCard({
             </svg>
             {post.comment_count} comments
           </Link>
+          {!own && (
+            <button
+              type="button"
+              onClick={() => setReporting(true)}
+              className="transition-colors hover:text-neutral-300"
+            >
+              Report
+            </button>
+          )}
           {isMod && !own && (
             <>
               <button type="button" onClick={modRemovePost} className="transition-colors hover:text-mature">
@@ -124,6 +136,9 @@ export default function PostCard({
           )}
         </div>
       </div>
+      {reporting && (
+        <ReportDialog type="post" id={post.id} onClose={() => setReporting(false)} />
+      )}
     </article>
   );
 }

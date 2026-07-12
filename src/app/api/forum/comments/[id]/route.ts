@@ -91,6 +91,23 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
     })
     .eq("id", id);
   if (updError) return jsonError(500, "db_error", updError.message);
+
+  // Removal resolves any open reports on this content (best-effort).
+  try {
+    await admin
+      .from("reports")
+      .update({
+        resolved_at: new Date().toISOString(),
+        resolved_by: caller.profile.id,
+        resolution: "removed",
+      })
+      .eq("subject_type", "comment")
+      .eq("subject_id", id)
+      .is("resolved_at", null);
+  } catch {
+    /* best-effort */
+  }
+
   if (!own) {
     await logMod(caller.profile.id, "remove_comment", "comment", id, {
       body: (comment.body as string | null)?.slice(0, 80) ?? null,
