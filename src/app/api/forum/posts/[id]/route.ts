@@ -93,12 +93,16 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
       post_title: post.title,
       reason,
     });
-    const { data: author } = await admin
-      .from("profiles")
-      .select("kick_id")
-      .eq("id", post.author_id)
-      .maybeSingle();
-    if (author) await broadcastPing(`user:${author.kick_id}`, "notif", {});
+    try {
+      const { data: author } = await admin
+        .from("profiles")
+        .select("kick_id")
+        .eq("id", post.author_id)
+        .maybeSingle();
+      if (author) await broadcastPing(`user:${author.kick_id}`, "notif", {});
+    } catch {
+      /* best-effort */
+    }
   }
   await broadcastPing(`post:${id}`, "removed", {});
   return Response.json({ ok: true });

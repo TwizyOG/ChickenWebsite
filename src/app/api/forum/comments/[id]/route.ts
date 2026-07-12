@@ -104,12 +104,16 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
       id,
       { excerpt: (comment.body as string | null)?.slice(0, 140) ?? "[gif]", reason },
     );
-    const { data: author } = await admin
-      .from("profiles")
-      .select("kick_id")
-      .eq("id", comment.author_id)
-      .maybeSingle();
-    if (author) await broadcastPing(`user:${author.kick_id}`, "notif", {});
+    try {
+      const { data: author } = await admin
+        .from("profiles")
+        .select("kick_id")
+        .eq("id", comment.author_id)
+        .maybeSingle();
+      if (author) await broadcastPing(`user:${author.kick_id}`, "notif", {});
+    } catch {
+      /* best-effort */
+    }
   }
   await broadcastPing(`post:${comment.post_id}`, "comments", {});
   return Response.json({ ok: true });

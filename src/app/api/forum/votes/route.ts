@@ -77,11 +77,15 @@ export async function POST(req: NextRequest) {
   const row = Array.isArray(data) ? data[0] : data;
 
   // Ping the thread the vote lives in (comment votes need the parent post id).
-  let postTopicId = id;
-  if (type === "comment") {
-    const { data: c } = await admin.from("comments").select("post_id").eq("id", id).maybeSingle();
-    postTopicId = (c?.post_id as string) ?? "";
+  try {
+    let postTopicId = id;
+    if (type === "comment") {
+      const { data: c } = await admin.from("comments").select("post_id").eq("id", id).maybeSingle();
+      postTopicId = (c?.post_id as string) ?? "";
+    }
+    if (postTopicId) await broadcastPing(`post:${postTopicId}`, "votes", {});
+  } catch {
+    /* best-effort */
   }
-  if (postTopicId) await broadcastPing(`post:${postTopicId}`, "votes", {});
   return Response.json(row ?? { new_score: 0, my_vote: value });
 }

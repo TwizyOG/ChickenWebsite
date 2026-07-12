@@ -160,7 +160,7 @@ export default function Header() {
       stale = true;
     };
   }, [kickUser]);
-  useLiveChannel(forumKickId ? `user:${forumKickId}` : null, ["notif"], () => {
+  useLiveChannel(kickUser && forumKickId ? `user:${forumKickId}` : null, ["notif"], () => {
     fetchForumNotifications().then(setForumBell);
   });
 

@@ -64,20 +64,24 @@ export async function POST(req: NextRequest) {
   // serverless doesn't kill them mid-flight. All best-effort.
   const commentId = (data as { id?: string })?.id;
   if (commentId) {
-    await broadcastPing(`post:${postId}`, "comments", { comment_id: commentId });
-    const { data: notifRows } = await admin
-      .from("notifications")
-      .select("profile_id")
-      .eq("comment_id", commentId);
-    const recipientIds = (notifRows ?? []).map((n) => n.profile_id as string);
-    if (recipientIds.length) {
-      const { data: recipients } = await admin
-        .from("profiles")
-        .select("kick_id")
-        .in("id", recipientIds);
-      for (const r of recipients ?? []) {
-        await broadcastPing(`user:${r.kick_id}`, "notif", {});
+    try {
+      await broadcastPing(`post:${postId}`, "comments", { comment_id: commentId });
+      const { data: notifRows } = await admin
+        .from("notifications")
+        .select("profile_id")
+        .eq("comment_id", commentId);
+      const recipientIds = (notifRows ?? []).map((n) => n.profile_id as string);
+      if (recipientIds.length) {
+        const { data: recipients } = await admin
+          .from("profiles")
+          .select("kick_id")
+          .in("id", recipientIds);
+        for (const r of recipients ?? []) {
+          await broadcastPing(`user:${r.kick_id}`, "notif", {});
+        }
       }
+    } catch {
+      /* live pings are best-effort — never fail a committed write */
     }
   }
   return Response.json(data);

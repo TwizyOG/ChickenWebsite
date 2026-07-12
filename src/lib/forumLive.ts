@@ -26,6 +26,7 @@ export function useLiveChannel(
   useEffect(() => {
     const sb = getSupabase();
     if (!sb || !topic) return;
+    gate.current = { last: 0, timer: null };
     const fire = (event: string, payload: Record<string, unknown>) => {
       if (coalesceMs <= 0) {
         cb.current(event, payload);

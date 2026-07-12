@@ -21,6 +21,7 @@ export async function broadcastPing(
         "Content-Type": "application/json",
       },
       body: JSON.stringify({ messages: [{ topic, event, payload }] }),
+      signal: AbortSignal.timeout(1500),
     });
   } catch {
     /* best-effort */
