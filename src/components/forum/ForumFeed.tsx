@@ -213,11 +213,7 @@ export default function ForumFeed() {
             ))}
           </div>
         )}
-        <SearchInput
-          key={`${sort}|${flair ?? ""}`}
-          active={q}
-          onSearch={(nq) => setQuery(sort, flair, nq)}
-        />
+        <SearchInput active={q} onSearch={(nq) => setQuery(sort, flair, nq)} />
         <div className="min-w-0 flex-1">
           <FlairBar flairs={flairs} active={flair} onPick={(id) => setQuery(sort, id, q)} />
         </div>
