@@ -2,6 +2,7 @@ import { type NextRequest } from "next/server";
 import { bannedResponse, jsonError, requireCaller } from "@/lib/forumApi";
 import { getSupabaseAdmin } from "@/lib/supabaseAdmin";
 import { isTenorMediaUrl } from "@/lib/tenor";
+import { broadcastPing } from "@/lib/forumRealtime";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -57,6 +58,27 @@ export async function POST(req: NextRequest) {
       return jsonError(400, "max_depth", "Thread is too deep — reply higher up.");
     }
     return jsonError(500, "db_error", error.message);
+  }
+
+  // Live pings + notification fan-out — awaited before the response so
+  // serverless doesn't kill them mid-flight. All best-effort.
+  const commentId = (data as { id?: string })?.id;
+  if (commentId) {
+    await broadcastPing(`post:${postId}`, "comments", { comment_id: commentId });
+    const { data: notifRows } = await admin
+      .from("notifications")
+      .select("profile_id")
+      .eq("comment_id", commentId);
+    const recipientIds = (notifRows ?? []).map((n) => n.profile_id as string);
+    if (recipientIds.length) {
+      const { data: recipients } = await admin
+        .from("profiles")
+        .select("kick_id")
+        .in("id", recipientIds);
+      for (const r of recipients ?? []) {
+        await broadcastPing(`user:${r.kick_id}`, "notif", {});
+      }
+    }
   }
   return Response.json(data);
 }

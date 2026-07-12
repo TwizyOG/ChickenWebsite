@@ -1,6 +1,7 @@
 import { type NextRequest } from "next/server";
 import { bannedResponse, jsonError, logMod, notify, requireCaller, roleRank } from "@/lib/forumApi";
 import { getSupabaseAdmin } from "@/lib/supabaseAdmin";
+import { broadcastPing } from "@/lib/forumRealtime";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -92,6 +93,13 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
       post_title: post.title,
       reason,
     });
+    const { data: author } = await admin
+      .from("profiles")
+      .select("kick_id")
+      .eq("id", post.author_id)
+      .maybeSingle();
+    if (author) await broadcastPing(`user:${author.kick_id}`, "notif", {});
   }
+  await broadcastPing(`post:${id}`, "removed", {});
   return Response.json({ ok: true });
 }

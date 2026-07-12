@@ -21,6 +21,7 @@ import { getMe } from "@/components/forum/useMe";
 import { type VoteState } from "@/components/forum/VoteRail";
 import FlairBar from "@/components/forum/FlairBar";
 import PostCard from "@/components/forum/PostCard";
+import { useLiveChannel } from "@/lib/forumLive";
 
 const SORTS: FeedSort[] = ["hot", "new", "top"];
 const SORT_LABEL: Record<FeedSort, string> = { hot: "Hot", new: "New", top: "Top" };
@@ -107,6 +108,8 @@ export default function ForumFeed() {
   // state tagged with a stale key renders as if it were the fresh empty state.
   const [feed, setFeed] = useState<FeedState>({ key, posts: null, done: false, error: null });
   const [voteState, setVoteState] = useState<Record<string, VoteState>>({});
+  const [pendingLive, setPendingLive] = useState(0);
+  useLiveChannel(q ? null : "feed", ["posts"], () => setPendingLive((n) => n + 1), 0);
   const shown: FeedState =
     feed.key === key ? feed : { key, posts: null, done: false, error: null };
   const cursor = useRef<FeedCursor>(null);
@@ -235,6 +238,21 @@ export default function ForumFeed() {
       </div>
 
       <div className="mt-4 space-y-3">
+        {pendingLive > 0 && !q && (
+          <button
+            type="button"
+            onClick={() => {
+              setPendingLive(0);
+              cursor.current = null;
+              offset.current = 0;
+              loadMore(true);
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
+            className="mx-auto flex items-center gap-2 rounded-full bg-accent px-4 py-1.5 text-xs font-bold text-accent-ink shadow-lg transition hover:bg-accent-soft"
+          >
+            {pendingLive} new post{pendingLive === 1 ? "" : "s"} — show
+          </button>
+        )}
         {shown.posts === null &&
           !shown.error &&
           Array.from({ length: 4 }).map((_, i) => (

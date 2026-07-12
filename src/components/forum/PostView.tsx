@@ -15,6 +15,7 @@ import { getMe, useMe } from "@/components/forum/useMe";
 import { type VoteState } from "@/components/forum/VoteRail";
 import PostCard from "@/components/forum/PostCard";
 import CommentThread from "@/components/forum/CommentThread";
+import { useLiveChannel } from "@/lib/forumLive";
 
 export default function PostView() {
   const id = useSearchParams().get("id");
@@ -50,6 +51,22 @@ export default function PostView() {
       stale = true;
     };
   }, [id]);
+
+  const [liveNonce, setLiveNonce] = useState(0);
+  useLiveChannel(id ? `post:${id}` : null, ["comments", "votes", "removed"], () => {
+    if (!id) return;
+    fetchPost(id)
+      .then((p) => {
+        setResult((prev) => (prev && prev.id === id ? { id, post: p } : prev));
+        if (p) {
+          setVote((prev) =>
+            prev && prev.id === id ? { id, state: { ...prev.state, score: p.score } } : prev,
+          );
+          setLiveNonce((x) => x + 1);
+        }
+      })
+      .catch(() => {});
+  });
 
   // no id → missing; wrong/absent result → still loading; loaded null → missing
   const post: FeedPost | null | "missing" = !id
@@ -170,6 +187,7 @@ export default function PostView() {
 
       <CommentThread
         postId={post.id}
+        refreshKey={liveNonce}
         onCountChange={(d) =>
           setResult((prev) =>
             prev?.post

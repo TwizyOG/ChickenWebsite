@@ -2,6 +2,7 @@ import { type NextRequest } from "next/server";
 import { bannedResponse, jsonError, requireCaller } from "@/lib/forumApi";
 import { getSupabaseAdmin } from "@/lib/supabaseAdmin";
 import { parseClipUrl } from "@/lib/clipEmbed";
+import { broadcastPing } from "@/lib/forumRealtime";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -151,5 +152,6 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  await broadcastPing("feed", "posts", { post_id: post.id });
   return Response.json({ id: post.id });
 }

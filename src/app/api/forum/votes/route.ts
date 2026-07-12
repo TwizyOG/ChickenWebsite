@@ -1,6 +1,7 @@
 import { type NextRequest } from "next/server";
 import { bannedResponse, jsonError, requireCaller } from "@/lib/forumApi";
 import { getSupabaseAdmin } from "@/lib/supabaseAdmin";
+import { broadcastPing } from "@/lib/forumRealtime";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -74,5 +75,13 @@ export async function POST(req: NextRequest) {
     return jsonError(500, "db_error", error.message);
   }
   const row = Array.isArray(data) ? data[0] : data;
+
+  // Ping the thread the vote lives in (comment votes need the parent post id).
+  let postTopicId = id;
+  if (type === "comment") {
+    const { data: c } = await admin.from("comments").select("post_id").eq("id", id).maybeSingle();
+    postTopicId = (c?.post_id as string) ?? "";
+  }
+  if (postTopicId) await broadcastPing(`post:${postTopicId}`, "votes", {});
   return Response.json(row ?? { new_score: 0, my_vote: value });
 }

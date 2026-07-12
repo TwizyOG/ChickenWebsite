@@ -19,9 +19,11 @@ type ThreadState = { key: string; rows: ThreadComment[] | null; error: string | 
 
 export default function CommentThread({
   postId,
+  refreshKey = 0,
   onCountChange,
 }: {
   postId: string;
+  refreshKey?: number;
   onCountChange?: (delta: number) => void;
 }) {
   const me = useMe();
@@ -55,7 +57,7 @@ export default function CommentThread({
     return () => {
       stale = true;
     };
-  }, [postId]);
+  }, [postId, refreshKey]);
 
   // Deep-link (#c-{id} from bell links): scroll once the thread has rendered.
   const loaded = shown.rows !== null;

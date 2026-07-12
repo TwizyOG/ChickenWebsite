@@ -7,6 +7,8 @@ import Logo from "./Logo";
 import { currentKickUser } from "@/lib/kickAuth";
 import { getProfile, onProfileChange } from "@/lib/profile";
 import { useAuth, displayName } from "./AuthProvider";
+import { getMe } from "@/components/forum/useMe";
+import { useLiveChannel } from "@/lib/forumLive";
 import {
   getNotices,
   markAllRead,
@@ -114,6 +116,7 @@ export default function Header() {
     items: [],
     unread: 0,
   });
+  const [forumKickId, setForumKickId] = useState<number | null>(null);
   const [menu, setMenu] = useState<null | "bell" | "user">(null);
   const menusRef = useRef<HTMLDivElement>(null);
 
@@ -145,6 +148,21 @@ export default function Header() {
       window.removeEventListener("focus", load);
     };
   }, [kickUser]);
+
+  // Resolve the numeric kick id (shared /me fetch) to join the user channel.
+  useEffect(() => {
+    if (!kickUser) return;
+    let stale = false;
+    getMe().then((m) => {
+      if (!stale && !("signedOut" in m)) setForumKickId(m.profile.kickId);
+    });
+    return () => {
+      stale = true;
+    };
+  }, [kickUser]);
+  useLiveChannel(forumKickId ? `user:${forumKickId}` : null, ["notif"], () => {
+    fetchForumNotifications().then(setForumBell);
+  });
 
   // Close dropdowns on outside click / Escape.
   useEffect(() => {
