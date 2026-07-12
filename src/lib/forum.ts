@@ -65,6 +65,27 @@ export async function fetchFeed(
   return (data ?? []) as FeedPost[];
 }
 
+export const SEARCH_PAGE = 25;
+export const SEARCH_MAX = 200; // matches the RPC's offset clamp
+
+/** Ranked full-text post search (plan 06). Offset paging, capped at SEARCH_MAX. */
+export async function fetchSearch(
+  q: string,
+  flair: number | null,
+  offset: number,
+): Promise<FeedPost[]> {
+  const sb = getSupabase();
+  if (!sb || !q.trim()) return [];
+  const { data, error } = await sb.rpc("search_posts", {
+    p_q: q.trim(),
+    p_flair: flair,
+    p_limit: SEARCH_PAGE,
+    p_offset: Math.min(Math.max(offset, 0), SEARCH_MAX),
+  });
+  if (error) throw new Error(error.message);
+  return (data ?? []) as FeedPost[];
+}
+
 export async function fetchFlairs(): Promise<Flair[]> {
   const sb = getSupabase();
   if (!sb) return [];
