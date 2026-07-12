@@ -54,7 +54,6 @@ export default function RootLayout({
               {/* Top banner (from chickenandy.com). object-cover crops the
                   image's white top/bottom bands so it sits flush. */}
               <div className="w-full overflow-hidden border-b border-line bg-black">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src="/banner.png"
                   alt="ChickenAndy"
