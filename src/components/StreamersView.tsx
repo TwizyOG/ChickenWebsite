@@ -6,7 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { STREAMERS, CREW_STREAMERS, TOTAL_STREAMERS } from "@/lib/streamers";
 import { fmtCount } from "@/lib/kick";
 import { useKickMap } from "./KickProvider";
-import StreamerCard, { CardSkeleton } from "./StreamerCard";
+import StreamerRow from "./StreamerRow";
 import StreamerDetail from "./StreamerDetail";
 import type { Streamer } from "@/lib/types";
 
@@ -128,18 +128,21 @@ export default function StreamersView() {
         </div>
       </div>
 
-      {/* live grid */}
+      {/* live list */}
       <section className="mb-10">
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {!ready && liveList.length === 0
-            ? Array.from({ length: 8 }).map((_, i) => <CardSkeleton key={i} />)
-            : liveList.map((s) => (
-                <div key={s.slug} className="rise">
-                  <StreamerCard streamer={s} onInfo={setDetail} />
+        {!ready && liveList.length === 0 ? (
+          <div className="overflow-hidden rounded-xl border border-line bg-panel">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="flex items-center gap-3 border-b border-line px-4 py-3 last:border-0">
+                <div className="skeleton h-11 w-11 rounded-full" />
+                <div className="flex-1 space-y-2">
+                  <div className="skeleton h-4 w-1/3 rounded" />
+                  <div className="skeleton h-3 w-1/2 rounded" />
                 </div>
-              ))}
-        </div>
-        {ready && liveList.length === 0 && (
+              </div>
+            ))}
+          </div>
+        ) : liveList.length === 0 ? (
           <div className="rounded-2xl border border-line bg-panel p-10 text-center">
             <p className="font-display text-lg font-extrabold uppercase">
               No one is live right now.
@@ -147,6 +150,12 @@ export default function StreamersView() {
             <p className="mt-1 text-sm text-faint">
               Check back soon — streams appear here the moment a creator goes live.
             </p>
+          </div>
+        ) : (
+          <div className="overflow-hidden rounded-xl border border-line bg-panel">
+            {liveList.map((s) => (
+              <StreamerRow key={s.slug} streamer={s} onInfo={setDetail} />
+            ))}
           </div>
         )}
       </section>
@@ -162,13 +171,11 @@ export default function StreamersView() {
       {/* Featured / RV crew (retained roster rail) */}
       {crew.length > 0 && (
         <section className="mb-12">
-          <SectionTitle>Featured / RV Crew</SectionTitle>
+          <SectionTitle count={crew.length}>Featured / RV Crew</SectionTitle>
           <p className="mt-1 text-sm text-faint">The crew on the trip</p>
-          <div className="mt-5 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
+          <div className="mt-5 overflow-hidden rounded-xl border border-accent/25 bg-panel">
             {crew.map((s) => (
-              <div key={s.slug} className="rise">
-                <StreamerCard streamer={s} onInfo={setDetail} />
-              </div>
+              <StreamerRow key={s.slug} streamer={s} onInfo={setDetail} />
             ))}
           </div>
         </section>
@@ -178,11 +185,9 @@ export default function StreamersView() {
       {offlineList.length > 0 && (
         <section className="mb-12">
           <SectionTitle count={offlineList.length}>Offline Streamers</SectionTitle>
-          <div className="mt-5 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
+          <div className="mt-5 overflow-hidden rounded-xl border border-line bg-panel">
             {offlineShown.map((s) => (
-              <div key={s.slug} className="rise">
-                <StreamerCard streamer={s} onInfo={setDetail} />
-              </div>
+              <StreamerRow key={s.slug} streamer={s} onInfo={setDetail} />
             ))}
           </div>
           {!showAllOffline && offlineList.length > OFFLINE_PREVIEW && (

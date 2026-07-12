@@ -1,7 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { STREAMERS } from "@/lib/streamers";
+import { useSearchParams } from "next/navigation";
+import { STREAMERS, CREW_STREAMERS } from "@/lib/streamers";
 import { useKickMap } from "./KickProvider";
 import FeaturedPlayer from "./FeaturedPlayer";
 import KickChat from "./KickChat";
@@ -13,24 +14,33 @@ const PAGE = 9;
 
 export default function HomeView() {
   const { live, ready } = useKickMap();
+  const params = useSearchParams();
   const [manual, setManual] = useState<string | null>(null);
   const [sortDesc, setSortDesc] = useState(true);
   const [visible, setVisible] = useState(PAGE);
   const [detail, setDetail] = useState<Streamer | null>(null);
 
+  // A streamer row's Watch action deep-links here as /?watch={slug}.
+  const watchParam = params.get("watch");
+  const watch = watchParam && STREAMERS.some((s) => s.slug === watchParam) ? watchParam : null;
+
   const autoFeatured = useMemo(() => {
-    // ChickenAndy is always the featured stream when he's live (his main
-    // channel first, then the RVX cam). Otherwise the highest-viewer live
-    // channel, falling back to a default when nobody's live.
+    // ChickenAndy is always featured when live (main channel, then the RVX cam);
+    // then any live RV-crew member; then the highest-viewer live channel; and a
+    // default only when nobody is live — never a random non-crew stream.
     for (const slug of ["chickenandy", "chickenandytv"]) {
       if (live[slug]?.live) return slug;
+    }
+    const liveCrew = CREW_STREAMERS.map((c) => c.slug).filter((slug) => live[slug]?.live);
+    if (liveCrew.length) {
+      return liveCrew.sort((a, b) => (live[b]?.viewers ?? 0) - (live[a]?.viewers ?? 0))[0];
     }
     const liveOnes = STREAMERS.map((s) => live[s.slug]).filter((d) => d?.live);
     if (liveOnes.length) return [...liveOnes].sort((a, b) => b.viewers - a.viewers)[0].slug;
     return "wvagabond";
   }, [live]);
 
-  const featured = manual ?? autoFeatured;
+  const featured = manual ?? watch ?? autoFeatured;
 
   const liveList = useMemo(() => {
     return STREAMERS.map((s) => ({ s, d: live[s.slug] }))
