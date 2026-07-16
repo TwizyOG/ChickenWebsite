@@ -21,6 +21,7 @@
 <radialGradient id="pz-lamp" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#FFF6D8"/><stop offset="1" stop-color="#FFF6D8" stop-opacity="0"/></radialGradient>
 <radialGradient id="pz-pool" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#C9D2E6" stop-opacity="0.12"/><stop offset="1" stop-color="#C9D2E6" stop-opacity="0"/></radialGradient>
 <g id="pz-window"><rect width="26" height="34" rx="1" fill="#0C1220"/><path d="M8.7 0V34M17.3 0V34M0 11.3H26M0 22.6H26" stroke="#3A445E" stroke-width="1.5"/></g>
+<g id="pz-coil"><circle cx="0" cy="0" r="13"/><path d="M-10 -8l6 -6M0 -13l2 -7M10 -8l6 -6M-13 0l-7 2M13 0l7 2"/></g>
 </defs>
 
 <rect width="1200" height="360" fill="url(#pz-sky)"/>
@@ -56,9 +57,9 @@
 <g stroke="#1A2233" stroke-width="2" opacity="0.7"><path d="M110 210V336"/><path d="M250 210V336"/><path d="M390 210V336"/><path d="M530 210V336"/><path d="M670 210V336"/><path d="M810 210V336"/><path d="M950 210V336"/></g>
 
 <!-- concertina razor wire along the wall top -->
-<g fill="none" stroke="#4C566C" stroke-width="1.6" opacity="0.85">
-<circle cx="30" cy="200" r="9"/><circle cx="90" cy="200" r="9"/><circle cx="150" cy="200" r="9"/><circle cx="210" cy="200" r="9"/><circle cx="270" cy="200" r="9"/><circle cx="330" cy="200" r="9"/><circle cx="390" cy="200" r="9"/><circle cx="450" cy="200" r="9"/><circle cx="510" cy="200" r="9"/><circle cx="570" cy="200" r="9"/><circle cx="630" cy="200" r="9"/><circle cx="690" cy="200" r="9"/><circle cx="750" cy="200" r="9"/><circle cx="810" cy="200" r="9"/><circle cx="870" cy="200" r="9"/><circle cx="930" cy="200" r="9"/><circle cx="990" cy="200" r="9"/><circle cx="1050" cy="200" r="9"/><circle cx="1110" cy="200" r="9"/><circle cx="1170" cy="200" r="9"/>
-<path d="M0 200H1200"/>
+<g fill="none" stroke="#4C566C" stroke-width="1.5" opacity="0.85" stroke-linecap="round">
+<path d="M0 202H1200"/>
+<use href="#pz-coil" x="20" y="200"/><use href="#pz-coil" x="60" y="200"/><use href="#pz-coil" x="100" y="200"/><use href="#pz-coil" x="140" y="200"/><use href="#pz-coil" x="180" y="200"/><use href="#pz-coil" x="220" y="200"/><use href="#pz-coil" x="260" y="200"/><use href="#pz-coil" x="300" y="200"/><use href="#pz-coil" x="340" y="200"/><use href="#pz-coil" x="380" y="200"/><use href="#pz-coil" x="420" y="200"/><use href="#pz-coil" x="460" y="200"/><use href="#pz-coil" x="500" y="200"/><use href="#pz-coil" x="540" y="200"/><use href="#pz-coil" x="580" y="200"/><use href="#pz-coil" x="620" y="200"/><use href="#pz-coil" x="660" y="200"/><use href="#pz-coil" x="700" y="200"/><use href="#pz-coil" x="740" y="200"/><use href="#pz-coil" x="780" y="200"/><use href="#pz-coil" x="820" y="200"/><use href="#pz-coil" x="860" y="200"/><use href="#pz-coil" x="900" y="200"/><use href="#pz-coil" x="940" y="200"/><use href="#pz-coil" x="980" y="200"/><use href="#pz-coil" x="1020" y="200"/><use href="#pz-coil" x="1060" y="200"/><use href="#pz-coil" x="1100" y="200"/><use href="#pz-coil" x="1140" y="200"/><use href="#pz-coil" x="1180" y="200"/>
 </g>
 
 <!-- guard tower (right) -->
