@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { type SiteEvent } from "@/lib/events";
+import { asset } from "@/lib/assetPath";
 
 /* One event card. The banner is either an animated scene (RV X, an <img> that
    always loads and animates) or a poster image layered over a hue gradient via
@@ -14,7 +15,7 @@ export default function EventCard({ event }: { event: SiteEvent }) {
 
   const bannerStyle: React.CSSProperties = event.image
     ? {
-        backgroundImage: `url(${event.image}), ${gradient}`,
+        backgroundImage: `url(${asset(event.image)}), ${gradient}`,
         backgroundSize: "cover",
         backgroundPosition: "center 30%",
       }
@@ -27,7 +28,7 @@ export default function EventCard({ event }: { event: SiteEvent }) {
       <div className="relative h-28 overflow-hidden sm:h-32" style={bannerStyle}>
         {hasScene && (
           <img
-            src={`/${event.scene}.svg`}
+            src={asset(`/${event.scene}.svg`)}
             alt=""
             aria-hidden="true"
             className="absolute inset-0 h-full w-full object-cover"

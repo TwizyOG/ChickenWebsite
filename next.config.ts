@@ -10,6 +10,9 @@ const isExport = process.env.BUILD_TARGET === "export";
 const basePath = process.env.PAGES_BASE_PATH || "";
 
 const nextConfig: NextConfig = {
+  // Inlined at build time; lets src/lib/assetPath.ts prefix public-asset URLs
+  // (plain <img>/url() srcs don't get basePath applied automatically).
+  env: { NEXT_PUBLIC_BASE_PATH: basePath },
   turbopack: {
     root: fileURLToPath(new URL(".", import.meta.url)),
   },

@@ -9,6 +9,7 @@ import { AuthProvider } from "@/components/AuthProvider";
 import KickAutoSubscribe from "@/components/KickAutoSubscribe";
 import KickSessionKeeper from "@/components/KickSessionKeeper";
 import FavoriteLiveWatcher from "@/components/FavoriteLiveWatcher";
+import { asset } from "@/lib/assetPath";
 
 const lexend = Lexend({
   variable: "--font-lexend",
@@ -55,7 +56,7 @@ export default function RootLayout({
                   image's white top/bottom bands so it sits flush. */}
               <div className="w-full overflow-hidden border-b border-line bg-black">
                 <img
-                  src="/banner.png"
+                  src={asset("/banner.png")}
                   alt="ChickenAndy"
                   className="block h-14 w-full scale-[1.35] object-cover object-center sm:h-20 lg:h-28"
                 />

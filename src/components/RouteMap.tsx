@@ -5,6 +5,7 @@ import maplibregl, { type StyleSpecification } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { CITIES, MAP_SOURCES as M, mediaForCity, type City } from "@/lib/rvx";
 import CityMedia from "./CityMedia";
+import { asset } from "@/lib/assetPath";
 
 /* RV X interactive route map — ported from the original site's RouteMap.jsx.
    Free/keyless sources: CARTO dark raster, EOX satellite, Mapterhorn DEM (3D),
@@ -203,7 +204,7 @@ export default function RouteMap() {
     });
 
     const rvEl = document.createElement("div");
-    rvEl.innerHTML = `<img src="/rv-marker.svg" alt="" draggable="false" style="width:46px;filter:drop-shadow(0 2px 4px rgba(0,0,0,.6))">`;
+    rvEl.innerHTML = `<img src="${asset("/rv-marker.svg")}" alt="" draggable="false" style="width:46px;filter:drop-shadow(0 2px 4px rgba(0,0,0,.6))">`;
     rvMarkerRef.current = new maplibregl.Marker({ element: rvEl, anchor: "bottom", offset: [0, -36] })
       .setLngLat([CITIES[CITIES.length - 1].lon, CITIES[CITIES.length - 1].lat])
       .addTo(map);
