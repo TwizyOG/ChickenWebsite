@@ -1,5 +1,7 @@
 # Event Card Backgrounds Implementation Plan
 
+> **Status: ✅ Shipped & verified (2026-07-16).** All 4 tasks landed on branch `events-backgrounds` (commits `d170d9e`, `9ec3bac`, `f146fee`, plus verification-polish `6f1f48b`). Gates: `npm run build` success, `npx vitest run` → 36 passing, no new lint errors in `EventCard.tsx`/`events.ts`. Preview review at card aspect confirmed both scenes render, animate, and frame correctly (no console errors; both SVGs 200). Two refinements were made during Task 4 review — prison razor wire became an overlapping bladed coil, and the RV X birds were recolored to a visible dusk-silhouette tone.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Finish the two Events-hub card backgrounds — polish the existing RV X animated scene (`roadtrip.svg`) and give the Deepak Prison Stream card its own hand-authored, self-contained animated SVG scene (`prison.svg`) instead of the missing `/deepak-prison-stream.jpg` poster that currently falls back to a flat gradient.
@@ -40,7 +42,7 @@
 
 The current file is a single-line minified SVG: a dusk parallax scene (sky gradient + sun, clouds, stars, far mountains, mid-ground buildings/trees/signs, scrolling road with animated dashes, near-ground bushes/fence, and an animated RV that bobs, spins its wheels, and puffs exhaust). **Do not remove or restructure any of it.** These edits only *add* four tasteful layers. Because the file is minified, apply each edit as a precise find-and-insert against the anchor strings below.
 
-- [ ] **Step 1: Add two new gradients to `<defs>`**
+- [x] **Step 1: Add two new gradients to `<defs>`**
 
 Find the sun gradient's closing tag (anchor — it appears once):
 
@@ -54,7 +56,7 @@ Immediately after it, insert:
 <radialGradient id="rt-glow" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#F2A65A" stop-opacity="0.5"></stop><stop offset="0.5" stop-color="#C75B28" stop-opacity="0.16"></stop><stop offset="1" stop-color="#C75B28" stop-opacity="0"></stop></radialGradient><radialGradient id="rt-head" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#FBE2A0" stop-opacity="0.85"></stop><stop offset="1" stop-color="#FBE2A0" stop-opacity="0"></stop></radialGradient>
 ```
 
-- [ ] **Step 2: Add the sunset glow + horizon haze behind the sun**
+- [x] **Step 2: Add the sunset glow + horizon haze behind the sun**
 
 Find the sun circle (anchor):
 
@@ -68,7 +70,7 @@ Replace it with the glow rect + haze band + the original sun circle (glow behind
 <rect x="150" y="120" width="360" height="260" fill="url(#rt-glow)"></rect><rect x="0" y="244" width="1200" height="24" fill="#C75B28" opacity="0.10"></rect><circle cx="330" cy="252" r="46" fill="url(#rt-sun)" opacity="0.85"></circle>
 ```
 
-- [ ] **Step 3: Add bird + beam animations to the `<style>` block**
+- [x] **Step 3: Add bird + beam animations to the `<style>` block**
 
 Find the last keyframe in the style block (anchor):
 
@@ -86,7 +88,7 @@ Immediately after it (before `</style>`), insert:
 
 (The birds reuse the existing `rt-scroll` keyframe at a slow rate for far-parallax drift; the headlight reuses a new gentle flicker.)
 
-- [ ] **Step 4: Add drifting birds above the horizon**
+- [x] **Step 4: Add drifting birds above the horizon**
 
 Find the far-parallax layer group (anchor — the mountains layer):
 
@@ -100,7 +102,7 @@ Immediately **before** it, insert a birds layer (small dark silhouettes at y≈1
 <g class="rt-birds" fill="none" stroke="#1A140E" stroke-width="1.5" stroke-linecap="round" opacity="0.7"><g id="rt-bird-set"><path d="M150 150 q5 -5 10 0 q5 -5 10 0"></path><path d="M240 138 q4 -4 8 0 q4 -4 8 0"></path><path d="M330 158 q4 -4 8 0 q4 -4 8 0"></path><path d="M470 146 q5 -5 10 0 q5 -5 10 0"></path><path d="M690 152 q4 -4 8 0 q4 -4 8 0"></path></g><use href="#rt-bird-set" x="1200"></use></g>
 ```
 
-- [ ] **Step 5: Add the RV headlight glow**
+- [x] **Step 5: Add the RV headlight glow**
 
 Find the front headlight detail inside the RV body (anchor — the small warm headlight rect):
 
@@ -114,7 +116,7 @@ Immediately after it, insert a soft warm glow halo over the headlight (local RV 
 <ellipse class="rt-head" cx="114" cy="41" rx="11" ry="7" fill="url(#rt-head)"></ellipse>
 ```
 
-- [ ] **Step 6: Verify the file is still valid XML and renders**
+- [x] **Step 6: Verify the file is still valid XML and renders**
 
 Run:
 
@@ -125,7 +127,7 @@ npm run build
 
 Expected: the node check prints tag counts and throws nothing (all three new ids present); `npm run build` succeeds (static asset, so build is unaffected but confirms nothing else broke). Visual confirmation happens in Task 4.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add public/roadtrip.svg
@@ -146,7 +148,7 @@ EOF
 
 A self-contained night prison-yard scene: deep-indigo sky with twinkling stars and a soft moon; a cell-block silhouette whose barred windows peek over a concrete perimeter wall topped with concertina razor wire; a guard tower on the right with a lit control room, a blinking red beacon, and a **searchlight beam that sweeps across the yard**; drifting ground fog; a faint light pool on the yard floor. Cool steel-blue/indigo palette (reads as night, complements the card's violet `hue: 265` fallback). Architecture and light only — no figures. Same `viewBox="0 0 1200 360"` as `roadtrip.svg` so `EventCard` framing is identical.
 
-- [ ] **Step 1: Create `public/prison.svg` with this exact content**
+- [x] **Step 1: Create `public/prison.svg` with this exact content**
 
 ```xml
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 360" preserveAspectRatio="xMidYMid slice">
@@ -242,7 +244,7 @@ A self-contained night prison-yard scene: deep-indigo sky with twinkling stars a
 </svg>
 ```
 
-- [ ] **Step 2: Verify the file is well-formed and self-contained**
+- [x] **Step 2: Verify the file is well-formed and self-contained**
 
 Run:
 
@@ -252,7 +254,7 @@ node -e "const s=require('fs').readFileSync('public/prison.svg','utf8'); if(/htt
 
 Expected: prints `prison.svg ok, bytes <n>` and throws nothing (no external URL besides the SVG namespace; all key ids present).
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add public/prison.svg
@@ -274,7 +276,7 @@ EOF
 
 Generalize `EventCard` so any `scene` value loads `/{scene}.svg` (today it hard-codes `roadtrip`), then widen the `SiteEvent.scene` type and repoint the Deepak event from the missing poster to the new scene.
 
-- [ ] **Step 1: Generalize the scene check in `EventCard.tsx`**
+- [x] **Step 1: Generalize the scene check in `EventCard.tsx`**
 
 In `src/components/EventCard.tsx`, find:
 
@@ -288,7 +290,7 @@ Replace with:
   const hasScene = Boolean(event.scene);
 ```
 
-- [ ] **Step 2: Make the `<img>` load the scene-specific file**
+- [x] **Step 2: Make the `<img>` load the scene-specific file**
 
 In the same file, find:
 
@@ -316,7 +318,7 @@ Replace with:
         )}
 ```
 
-- [ ] **Step 3: Widen the `scene` type in `events.ts`**
+- [x] **Step 3: Widen the `scene` type in `events.ts`**
 
 In `src/lib/events.ts`, find:
 
@@ -330,7 +332,7 @@ Replace with:
   scene?: "roadtrip" | "prison"; // animated scene used as the card banner background
 ```
 
-- [ ] **Step 4: Repoint the Deepak event from the missing poster to the scene**
+- [x] **Step 4: Repoint the Deepak event from the missing poster to the scene**
 
 In the same file, find the Deepak event's background field:
 
@@ -350,7 +352,7 @@ Replace with (drop the never-present poster; keep `hue: 265` as the fallback if 
   },
 ```
 
-- [ ] **Step 5: Run the gates**
+- [x] **Step 5: Run the gates**
 
 ```bash
 npm run lint
@@ -360,7 +362,7 @@ npx vitest run
 
 Expected: `npm run build` succeeds; `npx vitest run` → 36 passing; `npm run lint` shows **no new errors in `EventCard.tsx` or `events.ts`** (only the 12 pre-existing baseline errors in unrelated files may appear). If `events.ts` or `EventCard.tsx` show a NEW error, fix it before continuing.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/components/EventCard.tsx src/lib/events.ts
@@ -380,25 +382,25 @@ EOF
 
 This is the real proof for visual assets — do not skip it.
 
-- [ ] **Step 1: Start the dev server**
+- [x] **Step 1: Start the dev server**
 
 Use the preview tool with `{name: "chickenweb"}` (defined in `.claude/launch.json`, port 3000). Then navigate to `http://localhost:3000/events`.
 
-- [ ] **Step 2: Confirm both cards render their scenes**
+- [x] **Step 2: Confirm both cards render their scenes**
 
 - Read the page / screenshot the `/events` route.
 - **RV X card ("Happening now"):** the dusk scene shows the RV, road, mountains — plus the new sunset glow around the sun, faint drifting birds above the horizon, and a warm headlight glow. Nothing important is clipped by the `object-cover` crop.
 - **Deepak Prison Stream card ("Upcoming"):** the night-prison scene shows the moon, cell-block barred windows over the wall, razor wire, the guard tower with its lit room and red beacon, and the searchlight beam sweeping. The white "DEEPAK PRISON STREAM" title and "Upcoming" badge stay legible over it.
 
-- [ ] **Step 3: Check the console for asset/render errors**
+- [x] **Step 3: Check the console for asset/render errors**
 
 Use `read_console_messages` — expect no 404 for `/prison.svg` or `/roadtrip.svg` and no SVG parse errors.
 
-- [ ] **Step 4: Framing fix loop (only if needed)**
+- [x] **Step 4: Framing fix loop (only if needed)**
 
 If a hero element is clipped or a scene reads poorly at card size: adjust the offending Y coordinates in the SVG (keep hero content y≈70–320 per the framing note), reload, and re-check. Because HMR doesn't reprocess `public/` assets on some setups, hard-reload the route (`navigate` to the same URL) after editing an SVG. If you change an SVG here, amend or add a follow-up commit with the tweak.
 
-- [ ] **Step 5: Capture proof**
+- [x] **Step 5: Capture proof**
 
 Take a screenshot of `/events` showing both finished cards and share it as the completion evidence.
 
