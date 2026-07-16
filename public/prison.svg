@@ -1,0 +1,91 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 360" preserveAspectRatio="xMidYMid slice">
+<style>
+.pz-beam{transform-box:view-box;transform-origin:1096px 108px;animation:pz-sweep 7s ease-in-out infinite alternate}
+.pz-fog{animation:pz-drift 46s linear infinite}
+.pz-beacon{animation:pz-blink 2.4s steps(1,end) infinite}
+.pz-win-a{animation:pz-flick 5s ease-in-out infinite}
+.pz-win-b{animation:pz-flick 3.7s ease-in-out infinite .9s}
+.pz-star{animation:pz-tw 4s ease-in-out infinite}
+.pz-star--2{animation-delay:1.3s}
+.pz-star--3{animation-delay:2.6s}
+@keyframes pz-sweep{0%{transform:rotate(-20deg)}100%{transform:rotate(15deg)}}
+@keyframes pz-drift{to{transform:translateX(-600px)}}
+@keyframes pz-blink{0%,58%{opacity:1}59%,100%{opacity:.15}}
+@keyframes pz-flick{0%,100%{opacity:.9}45%{opacity:.5}72%{opacity:.95}}
+@keyframes pz-tw{0%,100%{opacity:.75}50%{opacity:.18}}
+</style>
+<defs>
+<linearGradient id="pz-sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#070B16"/><stop offset="0.55" stop-color="#111A2E"/><stop offset="1" stop-color="#1C2743"/></linearGradient>
+<radialGradient id="pz-moon" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#D9E0EE" stop-opacity="0.9"/><stop offset="0.5" stop-color="#AEB9D2" stop-opacity="0.25"/><stop offset="1" stop-color="#AEB9D2" stop-opacity="0"/></radialGradient>
+<linearGradient id="pz-beamgrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F6F3DC" stop-opacity="0.32"/><stop offset="1" stop-color="#F6F3DC" stop-opacity="0"/></linearGradient>
+<radialGradient id="pz-lamp" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#FFF6D8"/><stop offset="1" stop-color="#FFF6D8" stop-opacity="0"/></radialGradient>
+<radialGradient id="pz-pool" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#C9D2E6" stop-opacity="0.12"/><stop offset="1" stop-color="#C9D2E6" stop-opacity="0"/></radialGradient>
+<g id="pz-window"><rect width="26" height="34" rx="1" fill="#0C1220"/><path d="M8.7 0V34M17.3 0V34M0 11.3H26M0 22.6H26" stroke="#3A445E" stroke-width="1.5"/></g>
+</defs>
+
+<rect width="1200" height="360" fill="url(#pz-sky)"/>
+
+<g fill="#DCE3F2">
+<circle class="pz-star" cx="150" cy="46" r="1.3"/><circle class="pz-star pz-star--2" cx="380" cy="30" r="1"/><circle class="pz-star pz-star--3" cx="560" cy="58" r="1.2"/><circle class="pz-star pz-star--2" cx="720" cy="26" r="1"/><circle class="pz-star" cx="880" cy="50" r="1.1"/><circle class="pz-star pz-star--3" cx="1000" cy="34" r="1"/>
+<circle cx="70" cy="84" r="0.9"/><circle cx="450" cy="98" r="0.9"/><circle cx="640" cy="112" r="0.8"/><circle cx="820" cy="90" r="0.8"/>
+</g>
+
+<circle cx="330" cy="86" r="62" fill="url(#pz-moon)"/>
+<circle cx="330" cy="86" r="27" fill="#E4E9F4"/>
+<circle cx="322" cy="80" r="4" fill="#C4CCDE" opacity="0.6"/><circle cx="340" cy="94" r="5" fill="#C4CCDE" opacity="0.5"/><circle cx="336" cy="78" r="3" fill="#C4CCDE" opacity="0.5"/>
+
+<!-- cell block behind the wall; one row of barred windows peeks over the wall -->
+<g>
+<rect x="-10" y="150" width="880" height="120" fill="#141C2E"/>
+<rect x="-10" y="150" width="880" height="5" fill="#20293E"/>
+<g transform="translate(40 166)"><use href="#pz-window"/></g>
+<g transform="translate(118 166)"><rect class="pz-win-a" x="1" y="1" width="24" height="32" fill="#E8B45A"/><use href="#pz-window"/></g>
+<g transform="translate(196 166)"><use href="#pz-window"/></g>
+<g transform="translate(274 166)"><use href="#pz-window"/></g>
+<g transform="translate(352 166)"><rect x="1" y="1" width="24" height="32" fill="#E8B45A" opacity="0.55"/><use href="#pz-window"/></g>
+<g transform="translate(430 166)"><use href="#pz-window"/></g>
+<g transform="translate(508 166)"><rect class="pz-win-b" x="1" y="1" width="24" height="32" fill="#E8B45A"/><use href="#pz-window"/></g>
+<g transform="translate(586 166)"><use href="#pz-window"/></g>
+<g transform="translate(664 166)"><use href="#pz-window"/></g>
+<g transform="translate(742 166)"><use href="#pz-window"/></g>
+</g>
+
+<!-- perimeter wall -->
+<rect x="0" y="206" width="1200" height="130" fill="#232C3E"/>
+<rect x="0" y="206" width="1200" height="4" fill="#33405A"/>
+<g stroke="#1A2233" stroke-width="2" opacity="0.7"><path d="M110 210V336"/><path d="M250 210V336"/><path d="M390 210V336"/><path d="M530 210V336"/><path d="M670 210V336"/><path d="M810 210V336"/><path d="M950 210V336"/></g>
+
+<!-- concertina razor wire along the wall top -->
+<g fill="none" stroke="#4C566C" stroke-width="1.6" opacity="0.85">
+<circle cx="30" cy="200" r="9"/><circle cx="90" cy="200" r="9"/><circle cx="150" cy="200" r="9"/><circle cx="210" cy="200" r="9"/><circle cx="270" cy="200" r="9"/><circle cx="330" cy="200" r="9"/><circle cx="390" cy="200" r="9"/><circle cx="450" cy="200" r="9"/><circle cx="510" cy="200" r="9"/><circle cx="570" cy="200" r="9"/><circle cx="630" cy="200" r="9"/><circle cx="690" cy="200" r="9"/><circle cx="750" cy="200" r="9"/><circle cx="810" cy="200" r="9"/><circle cx="870" cy="200" r="9"/><circle cx="930" cy="200" r="9"/><circle cx="990" cy="200" r="9"/><circle cx="1050" cy="200" r="9"/><circle cx="1110" cy="200" r="9"/><circle cx="1170" cy="200" r="9"/>
+<path d="M0 200H1200"/>
+</g>
+
+<!-- guard tower (right) -->
+<g>
+<path d="M1028 132L1010 330M1112 132L1130 330" stroke="#10151F" stroke-width="8" stroke-linecap="round"/>
+<path d="M1022 196L1118 196M1018 250L1122 250M1024 172L1116 250M1116 172L1024 250" stroke="#10151F" stroke-width="4"/>
+<path d="M998 88L1070 66L1142 88Z" fill="#10151F"/>
+<rect x="1006" y="88" width="128" height="50" fill="#1A2234"/>
+<rect x="1018" y="98" width="104" height="30" fill="#2A3550"/>
+<rect class="pz-win-a" x="1018" y="98" width="104" height="30" fill="#E8B45A" opacity="0.5"/>
+<path d="M1018 98H1122M1052 98V128M1088 98V128" stroke="#10151F" stroke-width="2"/>
+<path d="M1006 138H1134M1014 138V150M1070 138V150M1126 138V150" stroke="#10151F" stroke-width="3"/>
+<circle class="pz-beacon" cx="1070" cy="62" r="3.6" fill="#FF4D4D"/><circle class="pz-beacon" cx="1070" cy="62" r="7" fill="#FF4D4D" opacity="0.25"/>
+<circle cx="1096" cy="108" r="18" fill="url(#pz-lamp)"/><circle cx="1096" cy="108" r="5" fill="#FFF6D8"/>
+</g>
+
+<!-- searchlight beam -->
+<path class="pz-beam" d="M1096 108L1046 332L1148 332Z" fill="url(#pz-beamgrad)"/>
+
+<!-- yard floor + light pool -->
+<rect x="0" y="300" width="1200" height="60" fill="#0D1322"/>
+<rect x="0" y="300" width="1200" height="3" fill="#1B263F" opacity="0.7"/>
+<ellipse cx="560" cy="332" rx="220" ry="30" fill="url(#pz-pool)"/>
+
+<!-- drifting ground fog -->
+<g class="pz-fog" fill="#8290A8" opacity="0.06">
+<ellipse cx="120" cy="312" rx="150" ry="16"/><ellipse cx="380" cy="320" rx="180" ry="18"/><ellipse cx="640" cy="310" rx="160" ry="15"/><ellipse cx="900" cy="320" rx="170" ry="17"/>
+<ellipse cx="720" cy="312" rx="150" ry="16"/><ellipse cx="980" cy="320" rx="180" ry="18"/><ellipse cx="1240" cy="310" rx="160" ry="15"/><ellipse cx="1500" cy="320" rx="170" ry="17"/>
+</g>
+</svg>
