@@ -9,7 +9,7 @@ import { type SiteEvent } from "@/lib/events";
 export default function EventCard({ event }: { event: SiteEvent }) {
   const live = event.status === "live";
   const gradient = `linear-gradient(135deg, hsl(${event.hue} 70% 22%), hsl(${event.hue + 24} 65% 12%))`;
-  const hasScene = event.scene === "roadtrip";
+  const hasScene = Boolean(event.scene);
   const hasBg = hasScene || Boolean(event.image);
 
   const bannerStyle: React.CSSProperties = event.image
@@ -27,7 +27,7 @@ export default function EventCard({ event }: { event: SiteEvent }) {
       <div className="relative h-28 overflow-hidden sm:h-32" style={bannerStyle}>
         {hasScene && (
           <img
-            src="/roadtrip.svg"
+            src={`/${event.scene}.svg`}
             alt=""
             aria-hidden="true"
             className="absolute inset-0 h-full w-full object-cover"

@@ -18,7 +18,7 @@ export type SiteEvent = {
   watchUrl?: string; // external Kick channel (live events only)
   hue: number; // card gradient hue (fallback when no image/scene)
   image?: string; // poster/artwork used as the card banner background
-  scene?: "roadtrip"; // animated scene used as the card banner background
+  scene?: "roadtrip" | "prison"; // animated scene used as the card banner background
 };
 
 const current = CITIES.find((c) => c.status === "current");
@@ -49,6 +49,6 @@ export const EVENTS: SiteEvent[] = [
     where: "Kick",
     host: "Ice Poseidon",
     hue: 265,
-    image: "/deepak-prison-stream.jpg",
+    scene: "prison",
   },
 ];
