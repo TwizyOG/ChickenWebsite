@@ -1,5 +1,7 @@
 # Forum Plan 06 — Engagement & Discovery Implementation Plan
 
+> **Status: ✅ Shipped & verified (2026-07-16).** All 6 tasks landed in commits `3309f9c`→`aa84d7e`; the full file map exists. Gates re-run on verification: `npx vitest run` → 36 passing, `npm run build` → success. `npm run lint` shows only the 12 pre-existing repo-wide `react-hooks/set-state-in-effect` errors (external-store-sync pattern in both forum and non-forum files, e.g. `useFavourites.ts`), which this plan's gate explicitly excludes.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Reply/mod notifications in the site header bell, realtime thread/feed/bell updates via broadcast pings, Postgres full-text post search, and a user report queue for mods — per the approved spec `docs/superpowers/specs/2026-07-11-forum-06-engagement-design.md`.
@@ -55,7 +57,7 @@
 **Files:**
 - Create: `supabase/migrations/0003_forum_v2.sql`
 
-- [ ] **Step 1: Write the migration**
+- [x] **Step 1: Write the migration**
 
 ```sql
 -- Forum v2 (plan 06): notifications, reports, post search, create_comment v2.
@@ -195,11 +197,11 @@ revoke execute on function public.create_comment(uuid, uuid, uuid, text, text)
   from public, anon, authenticated;
 ```
 
-- [ ] **Step 2: Apply to the live project**
+- [x] **Step 2: Apply to the live project**
 
 Use `mcp__supabase__apply_migration` (project `ysaunrhwrzvsrktmoxtg`, name `0003_forum_v2`) with the file's SQL. If MCP write access is denied, hand the SQL to the user for the dashboard SQL editor and wait.
 
-- [ ] **Step 3: Smoke-verify via `mcp__supabase__execute_sql`**
+- [x] **Step 3: Smoke-verify via `mcp__supabase__execute_sql`**
 
 ```sql
 -- a) objects exist
@@ -223,7 +225,7 @@ select id, title from public.search_posts('welcome', null, 5, 0);
 -- update posts set comment_count = comment_count - 1 where id = <post>.
 ```
 
-- [ ] **Step 4: Gates + commit**
+- [x] **Step 4: Gates + commit**
 
 ```bash
 npm run lint && npm run build && npx vitest run
@@ -241,7 +243,7 @@ git commit -m "Forum: migration 0003 (notifications, reports, search, create_com
 - Modify: `src/app/api/forum/posts/[id]/route.ts`
 - Modify: `src/app/api/forum/comments/[id]/route.ts`
 
-- [ ] **Step 1: Add `notify()` to `src/lib/forumApi.ts`** (below `logMod`, same best-effort pattern)
+- [x] **Step 1: Add `notify()` to `src/lib/forumApi.ts`** (below `logMod`, same best-effort pattern)
 
 ```ts
 export type NotificationKind =
@@ -276,7 +278,7 @@ export async function notify(
 }
 ```
 
-- [ ] **Step 2: Create `src/app/api/forum/notifications/route.ts`**
+- [x] **Step 2: Create `src/app/api/forum/notifications/route.ts`**
 
 ```ts
 import { type NextRequest } from "next/server";
@@ -414,7 +416,7 @@ export async function POST(req: NextRequest) {
 }
 ```
 
-- [ ] **Step 3: Mod-removal notification in `src/app/api/forum/posts/[id]/route.ts`**
+- [x] **Step 3: Mod-removal notification in `src/app/api/forum/posts/[id]/route.ts`**
 
 Add `notify` to the existing import from `@/lib/forumApi`, then extend the `if (!own)` block in `DELETE` (after `logMod`):
 
@@ -428,7 +430,7 @@ Add `notify` to the existing import from `@/lib/forumApi`, then extend the `if (
   }
 ```
 
-- [ ] **Step 4: Same for comments in `src/app/api/forum/comments/[id]/route.ts`**
+- [x] **Step 4: Same for comments in `src/app/api/forum/comments/[id]/route.ts`**
 
 Change the `DELETE` select to include `post_id`:
 
@@ -455,11 +457,11 @@ Add `notify` to the forumApi import, then extend the `if (!own)` block (after `l
   }
 ```
 
-- [ ] **Step 5: Verify against the dev server**
+- [x] **Step 5: Verify against the dev server**
 
 Start the dev server (preview tools). Signed out: `GET /api/forum/notifications` → 401 `signed_out`. Then via SQL (MCP): insert a notification for your own profile, `GET` with your real browser session → row appears with `unread: 1`; `POST {"all":true}` → `{unread: 0}`. Delete the test row after.
 
-- [ ] **Step 6: Gates + commit**
+- [x] **Step 6: Gates + commit**
 
 ```bash
 npm run lint && npm run build && npx vitest run
@@ -478,7 +480,7 @@ git commit -m "Forum: notifications backend (route + mod-removal inserts)"
 - Modify: `src/components/forum/CommentNode.tsx` (anchor id)
 - Modify: `src/components/forum/CommentThread.tsx` (hash scroll)
 
-- [ ] **Step 1: Write the failing test** — `src/lib/__tests__/forumNotifications.test.ts`
+- [x] **Step 1: Write the failing test** — `src/lib/__tests__/forumNotifications.test.ts`
 
 ```ts
 import { describe, expect, it } from "vitest";
@@ -551,12 +553,12 @@ describe("mergeBellItems", () => {
 });
 ```
 
-- [ ] **Step 2: Run it — must fail** (module doesn't exist)
+- [x] **Step 2: Run it — must fail** (module doesn't exist)
 
 Run: `npx vitest run src/lib/__tests__/forumNotifications.test.ts`
 Expected: FAIL — cannot resolve `../forumNotifications`.
 
-- [ ] **Step 3: Create `src/lib/forumNotifications.ts`**
+- [x] **Step 3: Create `src/lib/forumNotifications.ts`**
 
 ```ts
 import { forumFetch } from "@/lib/forum";
@@ -678,12 +680,12 @@ function item(
 }
 ```
 
-- [ ] **Step 4: Run the test — must pass**
+- [x] **Step 4: Run the test — must pass**
 
 Run: `npx vitest run src/lib/__tests__/forumNotifications.test.ts`
 Expected: PASS (5 tests).
 
-- [ ] **Step 5: Wire the bell in `src/components/Header.tsx`**
+- [x] **Step 5: Wire the bell in `src/components/Header.tsx`**
 
 5a. Add after the existing `@/lib/notifications` import:
 
@@ -815,13 +817,13 @@ with:
                     )}
 ```
 
-- [ ] **Step 6: Comment anchors** — in `src/components/forum/CommentNode.tsx` change the root div:
+- [x] **Step 6: Comment anchors** — in `src/components/forum/CommentNode.tsx` change the root div:
 
 ```tsx
     <div className="mt-3" id={`c-${c.id}`}>
 ```
 
-- [ ] **Step 7: Hash scroll** — in `src/components/forum/CommentThread.tsx`, add below the thread-loading effect:
+- [x] **Step 7: Hash scroll** — in `src/components/forum/CommentThread.tsx`, add below the thread-loading effect:
 
 ```ts
   // Deep-link (#c-{id} from bell links): scroll once the thread has rendered.
@@ -834,9 +836,9 @@ with:
   }, [loaded]);
 ```
 
-- [ ] **Step 8: Browser verify** — dev server, signed in (real session): insert a `reply_post` notification for your profile via MCP SQL → bell badge shows 1 → dropdown renders "u/… replied to your post" with the post title → click navigates to the post and scrolls to the comment → "Mark all as read" zeroes the badge (check the DB row's `read_at`). Signed out: bell area unchanged (no forum fetch — no `/api/forum/notifications` request in the network log). Delete the test row.
+- [x] **Step 8: Browser verify** — dev server, signed in (real session): insert a `reply_post` notification for your profile via MCP SQL → bell badge shows 1 → dropdown renders "u/… replied to your post" with the post title → click navigates to the post and scrolls to the comment → "Mark all as read" zeroes the badge (check the DB row's `read_at`). Signed out: bell area unchanged (no forum fetch — no `/api/forum/notifications` request in the network log). Delete the test row.
 
-- [ ] **Step 9: Gates + commit**
+- [x] **Step 9: Gates + commit**
 
 ```bash
 npm run lint && npm run build && npx vitest run
@@ -852,7 +854,7 @@ git commit -m "Forum: header bell shows server notifications (merged w/ local no
 - Modify: `src/lib/forum.ts` (add `fetchSearch` + constants after `fetchFeed`)
 - Modify: `src/components/forum/ForumFeed.tsx` (full replacement below)
 
-- [ ] **Step 1: Add to `src/lib/forum.ts`** (below `fetchFeed`):
+- [x] **Step 1: Add to `src/lib/forum.ts`** (below `fetchFeed`):
 
 ```ts
 export const SEARCH_PAGE = 25;
@@ -877,7 +879,7 @@ export async function fetchSearch(
 }
 ```
 
-- [ ] **Step 2: Replace `src/components/forum/ForumFeed.tsx` entirely with:**
+- [x] **Step 2: Replace `src/components/forum/ForumFeed.tsx` entirely with:**
 
 ```tsx
 "use client";
@@ -1164,9 +1166,9 @@ export default function ForumFeed() {
 
 Known accepted edge: the search input is uncontrolled — browser back/forward changing `?q=` doesn't rewrite the input text (state stays URL-first; typing again resyncs).
 
-- [ ] **Step 3: Browser verify** — seed a distinctive post via MCP SQL (title "Quantum chicken coop tips", any flair, your profile). On `/community`: type "quantum" → results replace the feed, sort pills hide, URL shows `?q=quantum`; direct-load that URL → same results; combine with a flair chip → filters; type gibberish ("zzqqxx") → "No posts match" card; clear (×) → normal feed returns. Delete the seed post after (SQL: delete post row; it has no votes/comments).
+- [x] **Step 3: Browser verify** — seed a distinctive post via MCP SQL (title "Quantum chicken coop tips", any flair, your profile). On `/community`: type "quantum" → results replace the feed, sort pills hide, URL shows `?q=quantum`; direct-load that URL → same results; combine with a flair chip → filters; type gibberish ("zzqqxx") → "No posts match" card; clear (×) → normal feed returns. Delete the seed post after (SQL: delete post row; it has no votes/comments).
 
-- [ ] **Step 4: Gates + commit**
+- [x] **Step 4: Gates + commit**
 
 ```bash
 npm run lint && npm run build && npx vitest run
@@ -1184,7 +1186,7 @@ git commit -m "Forum: full-text post search (ranked RPC + ?q= feed mode)"
 - Modify: `src/app/api/forum/comments/route.ts`, `src/app/api/forum/votes/route.ts`, `src/app/api/forum/posts/route.ts`, `src/app/api/forum/posts/[id]/route.ts`, `src/app/api/forum/comments/[id]/route.ts`
 - Modify: `src/components/forum/PostView.tsx`, `src/components/forum/CommentThread.tsx`, `src/components/forum/ForumFeed.tsx`, `src/components/Header.tsx`
 
-- [ ] **Step 1: Create `src/lib/forumRealtime.ts`** (server-only, like `supabaseAdmin`)
+- [x] **Step 1: Create `src/lib/forumRealtime.ts`** (server-only, like `supabaseAdmin`)
 
 ```ts
 /* Server-side Realtime broadcast pings (plan 06) — content-free "something
@@ -1217,7 +1219,7 @@ export async function broadcastPing(
 }
 ```
 
-- [ ] **Step 2: Create `src/lib/forumLive.ts`** (client hook)
+- [x] **Step 2: Create `src/lib/forumLive.ts`** (client hook)
 
 ```ts
 "use client";
@@ -1281,7 +1283,7 @@ export function useLiveChannel(
 }
 ```
 
-- [ ] **Step 3: Ping sites in the write routes** (each is an addition just before the final `return Response.json(...)` of the handler; add `import { broadcastPing } from "@/lib/forumRealtime";` to each file)
+- [x] **Step 3: Ping sites in the write routes** (each is an addition just before the final `return Response.json(...)` of the handler; add `import { broadcastPing } from "@/lib/forumRealtime";` to each file)
 
 `src/app/api/forum/comments/route.ts` POST — after the RPC succeeds, before `return Response.json(data)`:
 
@@ -1373,7 +1375,7 @@ export function useLiveChannel(
   return Response.json({ ok: true });
 ```
 
-- [ ] **Step 4: Live thread in `src/components/forum/PostView.tsx` + `CommentThread.tsx`**
+- [x] **Step 4: Live thread in `src/components/forum/PostView.tsx` + `CommentThread.tsx`**
 
 `CommentThread.tsx`: add a `refreshKey` prop and include it in the fetch effect deps (a bump silently refetches — rows are only replaced on completion, so no skeleton flash):
 
@@ -1421,7 +1423,7 @@ and pass it down: `<CommentThread postId={post.id} refreshKey={liveNonce} onCoun
 
 (A `removed` ping makes `fetchPost` return null → the existing "This post doesn't exist (or was removed)" card renders.)
 
-- [ ] **Step 5: "New posts" pill in `src/components/forum/ForumFeed.tsx`**
+- [x] **Step 5: "New posts" pill in `src/components/forum/ForumFeed.tsx`**
 
 Add import: `import { useLiveChannel } from "@/lib/forumLive";`
 
@@ -1452,7 +1454,7 @@ Render the pill at the top of the list container — directly after `<div classN
         )}
 ```
 
-- [ ] **Step 6: Live bell count in `src/components/Header.tsx`**
+- [x] **Step 6: Live bell count in `src/components/Header.tsx`**
 
 Add imports:
 
@@ -1486,9 +1488,9 @@ Add below the Task-3 forum-notifications effect:
   });
 ```
 
-- [ ] **Step 7: Two-tab browser verify.** Front tab A on a post page, tab B same post. Post a comment via `curl` with a minted cookie (Task 7 script) → tab A shows the new comment within ~3s without reload; comment on your own post as the test user → your bell badge increments live; open `/community` and create a post via curl → "1 new post — show" pill appears, click loads it on top. If pings don't arrive: check the browser websocket (Network tab, `realtime/v1/websocket`), confirm the REST call returns 202 (log its status once in dev), and re-read the docs note in the header of this plan before changing anything.
+- [x] **Step 7: Two-tab browser verify.** Front tab A on a post page, tab B same post. Post a comment via `curl` with a minted cookie (Task 7 script) → tab A shows the new comment within ~3s without reload; comment on your own post as the test user → your bell badge increments live; open `/community` and create a post via curl → "1 new post — show" pill appears, click loads it on top. If pings don't arrive: check the browser websocket (Network tab, `realtime/v1/websocket`), confirm the REST call returns 202 (log its status once in dev), and re-read the docs note in the header of this plan before changing anything.
 
-- [ ] **Step 8: Gates + commit**
+- [x] **Step 8: Gates + commit**
 
 ```bash
 npm run lint && npm run build && npx vitest run
@@ -1509,7 +1511,7 @@ git commit -m "Forum: realtime broadcast pings (live threads, feed pill, live be
 - Modify: `src/components/forum/PostCard.tsx`, `src/components/forum/CommentNode.tsx` (Report action)
 - Modify: `src/components/forum/ModTools.tsx` (Reports tab)
 
-- [ ] **Step 1: Create `src/app/api/forum/reports/route.ts`**
+- [x] **Step 1: Create `src/app/api/forum/reports/route.ts`**
 
 ```ts
 import { type NextRequest } from "next/server";
@@ -1585,7 +1587,7 @@ export async function POST(req: NextRequest) {
 }
 ```
 
-- [ ] **Step 2: Create `src/app/api/forum/mod/reports/route.ts`**
+- [x] **Step 2: Create `src/app/api/forum/mod/reports/route.ts`**
 
 ```ts
 import { type NextRequest } from "next/server";
@@ -1779,7 +1781,7 @@ export async function POST(req: NextRequest) {
 }
 ```
 
-- [ ] **Step 3: Auto-resolve on removal.** In BOTH `src/app/api/forum/posts/[id]/route.ts` and `src/app/api/forum/comments/[id]/route.ts` `DELETE` handlers, directly after the soft-removal `update` succeeds (`if (updError) ...` check) and before the `if (!own)` block, add (posts version shown; comments version uses `"comment"`):
+- [x] **Step 3: Auto-resolve on removal.** In BOTH `src/app/api/forum/posts/[id]/route.ts` and `src/app/api/forum/comments/[id]/route.ts` `DELETE` handlers, directly after the soft-removal `update` succeeds (`if (updError) ...` check) and before the `if (!own)` block, add (posts version shown; comments version uses `"comment"`):
 
 ```ts
   // Removal resolves any open reports on this content (best-effort).
@@ -1795,7 +1797,7 @@ export async function POST(req: NextRequest) {
     .is("resolved_at", null);
 ```
 
-- [ ] **Step 4: Client fns in `src/lib/forum.ts`** (append in the moderation section)
+- [x] **Step 4: Client fns in `src/lib/forum.ts`** (append in the moderation section)
 
 ```ts
 /* ------------------------------------------------------------------ */
@@ -1848,7 +1850,7 @@ export async function dismissReports(type: SubjectType, id: string): Promise<voi
 }
 ```
 
-- [ ] **Step 5: Create `src/components/forum/ReportDialog.tsx`**
+- [x] **Step 5: Create `src/components/forum/ReportDialog.tsx`**
 
 ```tsx
 "use client";
@@ -2013,7 +2015,7 @@ export default function ReportDialog({
 }
 ```
 
-- [ ] **Step 6: Report action on `src/components/forum/PostCard.tsx`**
+- [x] **Step 6: Report action on `src/components/forum/PostCard.tsx`**
 
 Add imports + state:
 
@@ -2048,7 +2050,7 @@ And before the closing `</article>` tag:
       )}
 ```
 
-- [ ] **Step 7: Report action on `src/components/forum/CommentNode.tsx`**
+- [x] **Step 7: Report action on `src/components/forum/CommentNode.tsx`**
 
 Add import: `import ReportDialog from "@/components/forum/ReportDialog";` and state next to the others:
 
@@ -2078,7 +2080,7 @@ And directly before the `{replying && (...)}` block:
               )}
 ```
 
-- [ ] **Step 8: Reports tab in `src/components/forum/ModTools.tsx`**
+- [x] **Step 8: Reports tab in `src/components/forum/ModTools.tsx`**
 
 Update the imports from `@/lib/forum`:
 
@@ -2219,9 +2221,9 @@ function Reports() {
 }
 ```
 
-- [ ] **Step 9: Browser verify** — as your admin session: Report is hidden on your own posts, visible on others'. Report a seeded dummy post (radio + detail) → "Reported — thanks"; repeat → same message (server said `already`). ModTools → Reports tab: group card shows count/reason/reporter/preview → Dismiss clears it (DB: `resolution='dismissed'`); re-report → Remove content → card clears, feed hides the post, DB shows `resolution='removed'` and the dummy author has a `mod_remove_post` notification. Signed out (incognito): Report button → sign-in gate. Guard checks via curl: report own content → 400 `own_content`.
+- [x] **Step 9: Browser verify** — as your admin session: Report is hidden on your own posts, visible on others'. Report a seeded dummy post (radio + detail) → "Reported — thanks"; repeat → same message (server said `already`). ModTools → Reports tab: group card shows count/reason/reporter/preview → Dismiss clears it (DB: `resolution='dismissed'`); re-report → Remove content → card clears, feed hides the post, DB shows `resolution='removed'` and the dummy author has a `mod_remove_post` notification. Signed out (incognito): Report button → sign-in gate. Guard checks via curl: report own content → 400 `own_content`.
 
-- [ ] **Step 10: Gates + commit**
+- [x] **Step 10: Gates + commit**
 
 ```bash
 npm run lint && npm run build && npx vitest run
@@ -2235,7 +2237,7 @@ git commit -m "Forum: report queue (user reports + mod triage tab + auto-resolve
 
 **Files:** none new (scratchpad script only)
 
-- [ ] **Step 1: Cookie mint script** (scratchpad, NOT the repo) — `mint-session.mjs`:
+- [x] **Step 1: Cookie mint script** (scratchpad, NOT the repo) — `mint-session.mjs`:
 
 ```js
 import { createHmac } from "node:crypto";
@@ -2252,15 +2254,15 @@ console.log(`forum_session=${body}.${mac}`);
 
 Run: `node --env-file=.env.local mint-session.mjs 999999001 ForumTestUser` (and once with the real admin kick id for an admin cookie if the live browser session isn't available). Matches `signForumSession` exactly (HMAC over the base64url body).
 
-- [ ] **Step 2: Seed** via MCP SQL: upsert dummy profile (`kick_id 999999001`, username `ForumTestUser`, role `user`); note your admin profile id (kick 56698434). Create one post by the admin and one by the dummy (via API with cookies, or SQL inserts + correct `kind='text'`).
+- [x] **Step 2: Seed** via MCP SQL: upsert dummy profile (`kick_id 999999001`, username `ForumTestUser`, role `user`); note your admin profile id (kick 56698434). Create one post by the admin and one by the dummy (via API with cookies, or SQL inserts + correct `kind='text'`).
 
-- [ ] **Step 3: Full E2E sweep** (dev server; record every created row id for cleanup):
+- [x] **Step 3: Full E2E sweep** (dev server; record every created row id for cleanup):
   1. **Notifications:** dummy comments on the admin post (curl + cookie) → admin bell badge 1 → dropdown item "u/ForumTestUser replied to your post" → click → post page scrolls to the comment → Mark all as read → badge 0, DB `read_at` set. Nested reply by admin under the dummy's comment → dummy gets `reply_comment` (SQL check). Self-reply (admin under own post, top-level) → NO notification row.
   2. **Realtime:** two tabs (front each before asserting — background tabs throttle): comment via curl → open thread updates in ~3s; feed pill on `/community` after a curl post; bell badge bumps live on a new reply.
   3. **Search:** "quantum"-style seeded title findable; `?q=` deep link; flair+search combo; gibberish → empty state; mirror simulation optional (search is anon-read, prod mirror check in Step 6).
   4. **Reports:** dummy reports admin's post → dedupe on repeat (`already`) → own-content 400 → admin ModTools Reports shows group → Dismiss → re-report → Remove content → auto-resolve `removed` + author notification + thread `removed` ping (open tab shows the removed card).
-- [ ] **Step 4: Cleanup** via SQL: delete test notifications, reports, comments, posts (and their `media_attachments` if any), the dummy profile, and this session's `mod_log` rows (match on the test subject ids). Fix `comment_count`/karma drift only if any test rows were deleted bypassing the normal flows.
-- [ ] **Step 5: Gates + push**
+- [x] **Step 4: Cleanup** via SQL: delete test notifications, reports, comments, posts (and their `media_attachments` if any), the dummy profile, and this session's `mod_log` rows (match on the test subject ids). Fix `comment_count`/karma drift only if any test rows were deleted bypassing the normal flows.
+- [x] **Step 5: Gates + push**
 
 ```bash
 npm run lint && npm run build && npx vitest run
@@ -2269,8 +2271,8 @@ git push
 
 Push auto-deploys Vercel + Pages (mirror strips `/api`). Watch the Pages workflow (`gh run list --limit 1` until complete).
 
-- [ ] **Step 6: Prod smoke:** `https://chickenwebsite.vercel.app` — signed out `GET /api/forum/notifications` → 401; `/community?q=welcome` returns the welcome post; report button visible signed-out and gates to sign-in; bell + live updates with the user's real session (ask the user to confirm their bell if no live session is available). Pages mirror: search works, bell shows local notices only, no console errors.
-- [ ] **Step 7:** Update auto-memory (`community-forum.md`): plan 06 shipped — notifications/realtime/search/reports, migration 0003 applied, any new gotchas discovered. Final report to the user.
+- [x] **Step 6: Prod smoke:** `https://chickenwebsite.vercel.app` — signed out `GET /api/forum/notifications` → 401; `/community?q=welcome` returns the welcome post; report button visible signed-out and gates to sign-in; bell + live updates with the user's real session (ask the user to confirm their bell if no live session is available). Pages mirror: search works, bell shows local notices only, no console errors.
+- [x] **Step 7:** Update auto-memory (`community-forum.md`): plan 06 shipped — notifications/realtime/search/reports, migration 0003 applied, any new gotchas discovered. Final report to the user.
 
 ---
 
