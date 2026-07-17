@@ -20,25 +20,46 @@ export type ChatBadgeData = { type: string; text?: string; count?: number };
    (like emotes / channel sub art) rather than mapping types to local art. */
 export type GlobalBadge = { imageUrl: string; title: string };
 
+/* Hover tooltip over a chat badge — Kick shows the badge name (and, for the
+   account-level badge, the exact level) on hover. The native `title` attribute
+   is slow and unstyled, so this is a JS-free CSS tooltip that appears instantly
+   above the badge, matching Kick's chat. */
+function BadgeTip({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <span className="group relative mr-1 inline-flex shrink-0 align-text-bottom">
+      {children}
+      <span
+        role="tooltip"
+        className="pointer-events-none absolute bottom-full left-0 z-50 mb-1.5 whitespace-nowrap rounded-md bg-black/90 px-2 py-1 text-[11px] font-semibold leading-none text-white opacity-0 shadow-lg ring-1 ring-white/15 transition-opacity duration-100 group-hover:opacity-100"
+      >
+        {label}
+      </span>
+    </span>
+  );
+}
+
 function GlobalImageBadge({ badge }: { badge: GlobalBadge }) {
   return (
-    <img
-      src={badge.imageUrl}
-      alt={badge.title}
-      title={badge.title}
-      loading="lazy"
-      className="mr-1 inline-block h-4 w-4 shrink-0 object-contain align-text-bottom"
-    />
+    <BadgeTip label={badge.title}>
+      <img
+        src={badge.imageUrl}
+        alt={badge.title}
+        loading="lazy"
+        className="inline-block h-4 w-4 object-contain align-text-bottom"
+      />
+    </BadgeTip>
   );
 }
 
 function Svg({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <span className="mr-1 inline-block h-4 w-4 shrink-0 align-text-bottom" title={title}>
-      <svg viewBox="0 0 32 32" className="h-full w-full" aria-label={title} role="img">
-        {children}
-      </svg>
-    </span>
+    <BadgeTip label={title}>
+      <span className="inline-block h-4 w-4 align-text-bottom">
+        <svg viewBox="0 0 32 32" className="h-full w-full" aria-label={title} role="img">
+          {children}
+        </svg>
+      </span>
+    </BadgeTip>
   );
 }
 
@@ -275,13 +296,14 @@ function ChannelSub({ months = 1, subBadges }: { months?: number; subBadges: Sub
   for (const b of subBadges) if (months >= b.months) src = b.src;
   if (!src) return <SubStar months={months} />;
   return (
-    <img
-      src={src}
-      alt="Subscriber"
-      title={`Subscriber (${months} month${months === 1 ? "" : "s"})`}
-      loading="lazy"
-      className="mr-1 inline-block h-4 w-4 shrink-0 rounded-[3px] object-contain align-text-bottom"
-    />
+    <BadgeTip label={`Subscriber (${months} month${months === 1 ? "" : "s"})`}>
+      <img
+        src={src}
+        alt="Subscriber"
+        loading="lazy"
+        className="inline-block h-4 w-4 rounded-[3px] object-contain align-text-bottom"
+      />
+    </BadgeTip>
   );
 }
 
