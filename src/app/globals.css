@@ -145,6 +145,25 @@ body {
   animation: rise 0.4s ease-out both;
 }
 
+/* Kick's moderator badge is holographic — its gold + blue gradient layers
+   shimmer over the red base. Two offset fades reproduce that cycle. */
+@keyframes kb-shimmer {
+  0%,
+  100% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+.kb-shimmer {
+  animation: kb-shimmer 3.6s ease-in-out infinite;
+}
+.kb-shimmer-2 {
+  animation: kb-shimmer 3.6s ease-in-out infinite;
+  animation-delay: -1.8s;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::after,
