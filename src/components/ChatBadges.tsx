@@ -13,6 +13,25 @@ import type { SubBadge } from "@/lib/types";
 
 export type ChatBadgeData = { type: string; text?: string; count?: number };
 
+/* Global "v2" badges Kick now carries in `identity.badges_v2` — image-based
+   badges that show on a user's name in ANY channel: the account level badge
+   and Kick-chest collectible badges (Unikorn, Flyby, GOAT, Golden K, …). Each
+   entry is self-describing with a full `image_url`, so we render it directly
+   (like emotes / channel sub art) rather than mapping types to local art. */
+export type GlobalBadge = { imageUrl: string; title: string };
+
+function GlobalImageBadge({ badge }: { badge: GlobalBadge }) {
+  return (
+    <img
+      src={badge.imageUrl}
+      alt={badge.title}
+      title={badge.title}
+      loading="lazy"
+      className="mr-1 inline-block h-4 w-4 shrink-0 object-contain align-text-bottom"
+    />
+  );
+}
+
 function Svg({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <span className="mr-1 inline-block h-4 w-4 shrink-0 align-text-bottom" title={title}>
@@ -295,13 +314,19 @@ function BadgeIcon({ badge, subBadges }: { badge: ChatBadgeData; subBadges: SubB
 
 export default function ChatBadges({
   badges,
+  globalBadges = [],
   subBadges,
 }: {
   badges: ChatBadgeData[];
+  globalBadges?: GlobalBadge[];
   subBadges: SubBadge[];
 }) {
   return (
     <>
+      {/* Global badges (level + Kick-chest collectibles) lead, like Kick's chat */}
+      {globalBadges.map((b, i) => (
+        <GlobalImageBadge key={`g-${i}`} badge={b} />
+      ))}
       {badges.map((b, i) => (
         <BadgeIcon key={`${b.type}-${i}`} badge={b} subBadges={subBadges} />
       ))}

@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState, Fragment } from "react";
 import { currentKickUser } from "@/lib/kickAuth";
-import ChatBadges, { type ChatBadgeData } from "./ChatBadges";
+import ChatBadges, { type ChatBadgeData, type GlobalBadge } from "./ChatBadges";
 import type { SubBadge } from "@/lib/types";
 
 /* Kick chat rides on a public Pusher socket (same one kick.com's own web client
@@ -21,8 +21,35 @@ type Msg = {
   username: string;
   color: string;
   badges: ChatBadgeData[];
+  globalBadges: GlobalBadge[];
   content: string;
 };
+
+/* Kick's `identity.badges_v2` entry: image-based global badges (account level +
+   Kick-chest collectibles) with a full image_url. */
+type BadgeV2 = {
+  name?: string;
+  badge_type?: string;
+  image_url?: string;
+  metadata?: { level?: number };
+  sort_order?: number;
+};
+
+function parseGlobalBadges(identity: Record<string, unknown>): GlobalBadge[] {
+  const raw = identity.badges_v2;
+  if (!Array.isArray(raw)) return [];
+  return (raw as BadgeV2[])
+    .filter((b) => typeof b?.image_url === "string" && b.image_url)
+    .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
+    .map((b) => {
+      const lvl = b.metadata?.level;
+      const title =
+        b.name === "level" && typeof lvl === "number"
+          ? `Level ${lvl}`
+          : (b.name || "Badge").replace(/[_-]+/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+      return { imageUrl: b.image_url as string, title };
+    });
+}
 
 const EMOTE = /\[emote:(\d+):([^\]]+)\]/g;
 
@@ -84,8 +111,8 @@ function ChatLine({ m, subBadges }: { m: Msg; subBadges: SubBadge[] }) {
 
   return (
     <div className="chat-line px-3 py-1 text-sm leading-snug">
-      {/* icon badges, exactly like Kick's chat (channel sub art included) */}
-      <ChatBadges badges={m.badges} subBadges={subBadges} />
+      {/* icon badges, exactly like Kick's chat (global + channel sub art) */}
+      <ChatBadges badges={m.badges} globalBadges={m.globalBadges} subBadges={subBadges} />
       <span className="font-semibold" style={{ color: m.color }}>
         {m.username}
       </span>
@@ -244,6 +271,7 @@ export default function KickChat({ slug }: { slug: string }) {
               username: String(sender.username ?? "anon"),
               color: (identity.color as string) || "#e3b23c",
               badges,
+              globalBadges: parseGlobalBadges(identity),
               content: String(d.content ?? ""),
             };
             setMessages((prev) => {
