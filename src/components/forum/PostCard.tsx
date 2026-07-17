@@ -71,6 +71,31 @@ export default function PostCard({
       {post.title}
     </h2>
   );
+  const linkThumb = post.link_url && (
+    <a
+      href={post.link_url}
+      target="_blank"
+      rel="noopener noreferrer nofollow"
+      aria-label="Open linked article"
+      className="relative block h-24 w-32 shrink-0 overflow-hidden rounded-xl border border-line bg-white/5"
+    >
+      {post.link_image_url ? (
+        <img src={post.link_image_url} alt="" loading="lazy" className="h-full w-full object-cover" />
+      ) : (
+        <span className="grid h-full w-full place-items-center text-neutral-600">
+          <svg viewBox="0 0 24 24" className="h-7 w-7" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" aria-hidden>
+            <circle cx="12" cy="12" r="8.5" />
+            <path d="M3.5 12h17M12 3.5c2.6 2.3 3.9 5.2 3.9 8.5S14.6 18.2 12 20.5c-2.6-2.3-3.9-5.2-3.9-8.5S9.4 5.8 12 3.5z" />
+          </svg>
+        </span>
+      )}
+      <span className="absolute bottom-1 right-1 grid h-5 w-5 place-items-center rounded bg-black/70 text-neutral-200">
+        <svg viewBox="0 0 12 12" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+          <path d="M4.5 2.5H2.5v7h7V7.5M7 2.5h2.5V5M9.5 2.5L5.5 6.5" />
+        </svg>
+      </span>
+    </a>
+  );
   return (
     <article className="flex gap-3 rounded-xl border border-line bg-panel p-3 transition-colors hover:border-neutral-600">
       <VoteRail
@@ -90,13 +115,28 @@ export default function PostCard({
           <span>{timeAgo(post.created_at)} ago</span>
           {post.edited_at && <span className="italic">(edited)</span>}
         </div>
-        {full ? (
-          <div className="mt-1.5">{title}</div>
-        ) : (
-          <Link href={href} className="mt-1.5 block">
-            {title}
-          </Link>
-        )}
+        <div className="flex items-start gap-3">
+          <div className="min-w-0 flex-1">
+            {full ? (
+              <div className="mt-1.5">{title}</div>
+            ) : (
+              <Link href={href} className="mt-1.5 block">
+                {title}
+              </Link>
+            )}
+            {post.link_url && (
+              <a
+                href={post.link_url}
+                target="_blank"
+                rel="noopener noreferrer nofollow"
+                className="mt-1 block max-w-full truncate text-sm text-accent hover:underline"
+              >
+                {post.link_url}
+              </a>
+            )}
+          </div>
+          {linkThumb}
+        </div>
         <MediaViewer attachments={post.attachments} />
         {post.body &&
           (full || !post.attachments?.length) &&

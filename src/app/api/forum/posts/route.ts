@@ -3,6 +3,7 @@ import { bannedResponse, jsonError, requireCaller } from "@/lib/forumApi";
 import { getSupabaseAdmin } from "@/lib/supabaseAdmin";
 import { parseClipUrl } from "@/lib/clipEmbed";
 import { broadcastPing } from "@/lib/forumRealtime";
+import { isSafePublicUrl, scrapeOgImage } from "@/lib/ogScrape";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -34,6 +35,7 @@ export async function POST(req: NextRequest) {
     body?: unknown;
     attachments?: unknown;
     clip_url?: unknown;
+    link_url?: unknown;
   };
   try {
     raw = await req.json();
@@ -45,6 +47,7 @@ export async function POST(req: NextRequest) {
   const body = typeof raw.body === "string" ? raw.body.trim() : "";
   const flairId = Number(raw.flair_id);
   const clipUrl = typeof raw.clip_url === "string" ? raw.clip_url.trim() : "";
+  const linkUrl = typeof raw.link_url === "string" ? raw.link_url.trim() : "";
   const rawAtts = Array.isArray(raw.attachments) ? (raw.attachments as RawAttachment[]) : [];
 
   if (!title || title.length > MAX_TITLE) {
@@ -58,6 +61,12 @@ export async function POST(req: NextRequest) {
   }
   if (clipUrl && rawAtts.length) {
     return jsonError(400, "bad_media", "A post has uploads or a clip link, not both.");
+  }
+  if (linkUrl && (clipUrl || rawAtts.length)) {
+    return jsonError(400, "bad_media", "A link post can't also carry uploads or a clip.");
+  }
+  if (linkUrl && !isSafePublicUrl(linkUrl)) {
+    return jsonError(400, "bad_link", "That link doesn't look like a public http(s) URL.");
   }
 
   // ---- classify media -----------------------------------------------------
@@ -97,6 +106,9 @@ export async function POST(req: NextRequest) {
   const { data: flair } = await admin.from("flairs").select("id").eq("id", flairId).maybeSingle();
   if (!flair) return jsonError(400, "bad_flair", "That flair doesn't exist.");
 
+  // Resolve the article's preview image once, at creation (best-effort).
+  const linkImage = linkUrl ? await scrapeOgImage(linkUrl) : null;
+
   const { data: post, error } = await admin
     .from("posts")
     .insert({
@@ -105,6 +117,8 @@ export async function POST(req: NextRequest) {
       title,
       body: body || null,
       kind,
+      link_url: linkUrl || null,
+      link_image_url: linkImage,
     })
     .select("id")
     .single();

@@ -187,6 +187,7 @@ export default function PostView() {
 
       <CommentThread
         postId={post.id}
+        postAuthorKickId={post.author_kick_id}
         refreshKey={liveNonce}
         onCountChange={(d) =>
           setResult((prev) =>

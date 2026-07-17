@@ -32,6 +32,8 @@ export type FeedPost = {
   author_kick_id: number;
   hot_score: number;
   attachments: FeedAttachment[];
+  link_url: string | null;
+  link_image_url: string | null;
 };
 
 export type Flair = { id: number; name: string; color: string; position: number };
@@ -172,7 +174,16 @@ export type ThreadComment = {
 };
 
 export type CommentNodeData = { comment: ThreadComment; children: CommentNodeData[] };
-export type ThreadSort = "top" | "new";
+export type ThreadSort = "best" | "top" | "new" | "controversial" | "old" | "qa";
+
+export const THREAD_SORTS: { key: ThreadSort; label: string }[] = [
+  { key: "best", label: "Best" },
+  { key: "top", label: "Top" },
+  { key: "new", label: "New" },
+  { key: "controversial", label: "Controversial" },
+  { key: "old", label: "Old" },
+  { key: "qa", label: "Q&A" },
+];
 export type VoteValue = -1 | 0 | 1;
 export type SubjectType = "post" | "comment";
 
@@ -201,16 +212,68 @@ export function buildTree(rows: ThreadComment[]): CommentNodeData[] {
   return roots;
 }
 
-export function sortTree(nodes: CommentNodeData[], sort: ThreadSort): CommentNodeData[] {
+function subtreeSize(n: CommentNodeData): number {
+  return n.children.reduce((acc, c) => acc + subtreeSize(c), n.children.length);
+}
+
+function subtreeHasAuthor(n: CommentNodeData, kickId: number): boolean {
+  if (n.comment.author_kick_id === kickId) return true;
+  return n.children.some((c) => subtreeHasAuthor(c, kickId));
+}
+
+/* Reddit's Best/Controversial need per-direction vote counts; we only store
+   net score, so these are documented approximations (see forum plan 07):
+   best = score desc (ties oldest first), controversial = most replies with the
+   most neutral score, qa = best with post-author-answered threads bubbled. */
+export function sortTree(
+  nodes: CommentNodeData[],
+  sort: ThreadSort,
+  postAuthorKickId: number | null = null,
+): CommentNodeData[] {
+  const best = (a: CommentNodeData, b: CommentNodeData) =>
+    b.comment.score - a.comment.score || a.comment.created_at.localeCompare(b.comment.created_at);
   const cmp =
     sort === "top"
       ? (a: CommentNodeData, b: CommentNodeData) =>
           b.comment.score - a.comment.score ||
-          a.comment.created_at.localeCompare(b.comment.created_at)
-      : (a: CommentNodeData, b: CommentNodeData) =>
-          b.comment.created_at.localeCompare(a.comment.created_at);
+          b.comment.created_at.localeCompare(a.comment.created_at)
+      : sort === "new"
+        ? (a: CommentNodeData, b: CommentNodeData) =>
+            b.comment.created_at.localeCompare(a.comment.created_at)
+        : sort === "old"
+          ? (a: CommentNodeData, b: CommentNodeData) =>
+              a.comment.created_at.localeCompare(b.comment.created_at)
+          : sort === "controversial"
+            ? (a: CommentNodeData, b: CommentNodeData) => {
+                const heat = (n: CommentNodeData) =>
+                  (1 + subtreeSize(n)) / (1 + Math.abs(n.comment.score));
+                return heat(b) - heat(a) || best(a, b);
+              }
+            : best; // best + qa
   const rec = (list: CommentNodeData[]): CommentNodeData[] =>
     [...list].sort(cmp).map((n) => ({ ...n, children: rec(n.children) }));
+  const sorted = rec(nodes);
+  if (sort === "qa" && postAuthorKickId != null) {
+    // Stable partition: threads the post author replied in first.
+    const answered = sorted.filter((n) => subtreeHasAuthor(n, postAuthorKickId));
+    const rest = sorted.filter((n) => !subtreeHasAuthor(n, postAuthorKickId));
+    return [...answered, ...rest];
+  }
+  return sorted;
+}
+
+/** Comment search: keep comments matching `q` (body or author, case-insensitive)
+    plus their ancestors so the thread structure stays readable. */
+export function filterTree(nodes: CommentNodeData[], q: string): CommentNodeData[] {
+  const needle = q.trim().toLowerCase();
+  if (!needle) return nodes;
+  const matches = (c: ThreadComment) =>
+    (c.body ?? "").toLowerCase().includes(needle) ||
+    (c.author_username ?? "").toLowerCase().includes(needle);
+  const rec = (list: CommentNodeData[]): CommentNodeData[] =>
+    list
+      .map((n) => ({ ...n, children: rec(n.children) }))
+      .filter((n) => n.children.length > 0 || matches(n.comment));
   return rec(nodes);
 }
 
@@ -253,28 +316,11 @@ export async function createComment(
   postId: string,
   parentId: string | null,
   body: string,
-  gifUrl: string | null = null,
 ): Promise<ThreadComment> {
   return forumFetch("/api/forum/comments", {
     method: "POST",
-    body: JSON.stringify({ post_id: postId, parent_id: parentId, body, gif_url: gifUrl }),
+    body: JSON.stringify({ post_id: postId, parent_id: parentId, body }),
   });
-}
-
-export type GifResult = {
-  id: string;
-  preview: string;
-  url: string;
-  width: number;
-  height: number;
-  alt: string;
-};
-
-export async function searchGifs(q: string): Promise<GifResult[]> {
-  const j = await forumFetch<{ results: GifResult[] }>(
-    `/api/forum/gif-search?q=${encodeURIComponent(q)}`,
-  );
-  return j.results;
 }
 
 export async function updateComment(id: string, body: string): Promise<ThreadComment> {

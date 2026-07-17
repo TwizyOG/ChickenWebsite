@@ -1,12 +1,14 @@
 "use client";
 
 import React, { useState } from "react";
+import { isTrustedMediaUrl } from "@/lib/forumMedia";
 
 /* Reddit-style markdown → React elements. Security by construction: user text
    only ever becomes React text children (React escapes it) — we never use
    dangerouslySetInnerHTML — and link hrefs are scheme-checked. Supports bold,
    italic, strikethrough, superscript, inline code, links, spoilers, headings,
-   quotes, bullet/ordered lists, code blocks and tables. */
+   quotes, bullet/ordered lists, code blocks and tables. Inline images render
+   only from trusted hosts (our storage bucket); anything else stays a link. */
 
 const HREF_OK = /^(https?:\/\/|mailto:|\/|#)/i;
 function safeHref(url: string): string {
@@ -44,6 +46,19 @@ type InlineRule = {
 // Ordered by priority; on an index tie the earlier rule wins.
 const INLINE: InlineRule[] = [
   { re: /`([^`]+)`/, node: (m) => <code className="rounded bg-white/10 px-1 py-0.5 text-[0.85em]">{m[1]}</code> },
+  { re: /!\[([^\]]*)\]\(([^)\s]+)\)/, node: (m) =>
+      isTrustedMediaUrl(m[2]) ? (
+        <img
+          src={m[2]}
+          alt={m[1] || "image"}
+          loading="lazy"
+          className="my-1.5 block max-h-96 max-w-full rounded-lg"
+        />
+      ) : (
+        <a href={safeHref(m[2])} target="_blank" rel="noopener noreferrer nofollow" className="text-accent hover:underline">
+          {m[1] || m[2]}
+        </a>
+      ) },
   { re: /\[([^\]]+)\]\(([^)\s]+)\)/, node: (m, rec) => (
       <a href={safeHref(m[2])} target="_blank" rel="noopener noreferrer nofollow" className="text-accent hover:underline">
         {rec(m[1])}

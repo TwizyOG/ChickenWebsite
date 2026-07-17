@@ -11,9 +11,23 @@ export type PendingFile = {
 
 export type UploadTicket = { path: string; token: string; signedUrl: string };
 
+/** Image types the uploads API accepts (drag-drop / paste / picker share this). */
+export const ACCEPTED_IMAGE_TYPES = /^image\/(jpeg|png|webp|gif)$/;
+export const MAX_IMAGE_MB = 10;
+
 export function mediaPublicUrl(storagePath: string): string {
   const base = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
   return `${base}/storage/v1/object/public/forum-media/${storagePath}`;
+}
+
+/** Only our own storage bucket (and legacy Tenor GIFs) may render as inline
+    <img> from markdown — anything else stays a plain link. */
+export function isTrustedMediaUrl(url: string): boolean {
+  const bucket = mediaPublicUrl("");
+  if (bucket.length > "/storage/v1/object/public/forum-media/".length && url.startsWith(bucket)) {
+    return true;
+  }
+  return url.startsWith("https://media.tenor.com/");
 }
 
 export async function probeImage(file: File): Promise<PendingFile> {

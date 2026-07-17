@@ -30,6 +30,8 @@ export default function SubmitForm() {
   const [images, setImages] = useState<PendingFile[]>([]);
   const [video, setVideo] = useState<PendingFile | null>(null);
   const [clip, setClip] = useState("");
+  const [link, setLink] = useState("");
+  const [uploading, setUploading] = useState(0);
   const [progress, setProgress] = useState<Record<string, number>>({});
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -43,13 +45,21 @@ export default function SubmitForm() {
 
   const clipParsed = clip.trim() ? parseClipUrl(clip) : null;
   const clipInvalid = Boolean(clip.trim()) && !clipParsed;
-  const canPost = title.trim().length > 0 && flairId != null && !busy && !clipInvalid;
+  const linkInvalid = Boolean(link.trim()) && !/^https?:\/\/\S+\.\S+/i.test(link.trim());
+  const canPost =
+    title.trim().length > 0 &&
+    flairId != null &&
+    !busy &&
+    !clipInvalid &&
+    !linkInvalid &&
+    uploading === 0;
 
   async function pickImages(list: FileList | null) {
     if (!list?.length) return;
     setError(null);
     setVideo(null);
     setClip("");
+    setLink("");
     const room = MAX_IMAGES - images.length;
     const files = [...list].slice(0, room);
     for (const f of files) {
@@ -80,6 +90,7 @@ export default function SubmitForm() {
     }
     setImages([]);
     setClip("");
+    setLink("");
     setVideo(await probeVideo(f));
   }
 
@@ -88,6 +99,16 @@ export default function SubmitForm() {
     if (v.trim()) {
       setImages([]);
       setVideo(null);
+      setLink("");
+    }
+  }
+
+  function setArticleLink(v: string) {
+    setLink(v);
+    if (v.trim()) {
+      setImages([]);
+      setVideo(null);
+      setClip("");
     }
   }
 
@@ -128,6 +149,7 @@ export default function SubmitForm() {
           flair_id: flairId,
           attachments,
           clip_url: clipParsed ? clip.trim() : "",
+          link_url: !linkInvalid ? link.trim() : "",
         }),
       });
       const j = await r.json().catch(() => ({}));
@@ -231,9 +253,23 @@ export default function SubmitForm() {
           onChange={setBody}
           rows={5}
           maxLength={MAX_BODY}
-          placeholder="Text (optional) — supports markdown"
+          placeholder="Text (optional) — supports markdown, or drop images straight in"
+          onUploadingChange={setUploading}
         />
       </div>
+
+      <label className="mt-4 block text-xs font-semibold uppercase tracking-wide text-neutral-500">
+        Link <span className="text-neutral-600">(optional — article/website URL, shows a preview card)</span>
+      </label>
+      <input
+        value={link}
+        onChange={(e) => setArticleLink(e.target.value)}
+        placeholder="https://example.com/article"
+        className={`mt-2 w-full rounded-lg border bg-transparent px-3 py-2 text-sm text-neutral-100 outline-none transition-colors placeholder:text-neutral-600 ${linkInvalid ? "border-mature" : "border-line focus:border-accent"}`}
+      />
+      {linkInvalid && (
+        <p className="mt-1.5 text-xs text-mature">Links must start with http:// or https://.</p>
+      )}
 
       <label className="mt-4 block text-xs font-semibold uppercase tracking-wide text-neutral-500">
         Media <span className="text-neutral-600">(optional — images, one video, or a clip link)</span>

@@ -1,6 +1,8 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import { _internal, Markdown } from "../markdown";
+
+vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "https://test.supabase.co");
 
 const html = (text: string) => renderToStaticMarkup(<Markdown text={text} />);
 
@@ -54,5 +56,28 @@ describe("Markdown rendering — formats", () => {
   it("returns nothing for empty input", () => {
     expect(html("")).toBe("");
     expect(html("   ")).toBe("");
+  });
+});
+
+describe("Markdown rendering — inline images (plan 07)", () => {
+  const trusted = "https://test.supabase.co/storage/v1/object/public/forum-media/1/2026-07/x.png";
+  it("renders bucket-hosted images as <img>", () => {
+    const out = html(`![my pic](${trusted})`);
+    expect(out).toContain("<img");
+    expect(out).toContain(`src="${trusted}"`);
+    expect(out).toContain('alt="my pic"');
+  });
+  it("renders legacy tenor gifs as <img>", () => {
+    expect(html("![gif](https://media.tenor.com/abc/g.gif)")).toContain("<img");
+  });
+  it("degrades untrusted image urls to a plain link", () => {
+    const out = html("![x](https://evil.com/track.png)");
+    expect(out).not.toContain("<img");
+    expect(out).toContain('href="https://evil.com/track.png"');
+  });
+  it("neutralizes javascript: image urls entirely", () => {
+    const out = html("![x](javascript:alert(1))");
+    expect(out).not.toContain("<img");
+    expect(out).toContain('href="#"');
   });
 });
